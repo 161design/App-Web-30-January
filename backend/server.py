@@ -391,6 +391,52 @@ async def get_authorities(current_user: dict = Depends(get_current_user)):
         for user in authorities
     ]
 
+@api_router.get("/buildings/{building_name}/suggested-authorities")
+async def get_suggested_authorities_for_building(
+    building_name: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get suggested authorities based on historical snag data for this building"""
+    # Aggregate to find most common authorities for this building
+    pipeline = [
+        {
+            "$match": {
+                "project_name": building_name,
+                "assigned_authority_id": {"$exists": True, "$ne": None}
+            }
+        },
+        {
+            "$group": {
+                "_id": "$assigned_authority_id",
+                "snag_count": {"$sum": 1},
+                "last_assigned": {"$max": "$created_at"}
+            }
+        },
+        {
+            "$sort": {"snag_count": -1, "last_assigned": -1}
+        },
+        {
+            "$limit": 3
+        }
+    ]
+    
+    authority_stats = await db.snags.aggregate(pipeline).to_list(10)
+    
+    suggested = []
+    for stat in authority_stats:
+        try:
+            authority = await db.users.find_one({"_id": ObjectId(stat["_id"])})
+            if authority:
+                suggested.append({
+                    "id": str(authority["_id"]),
+                    "name": authority["name"],
+                    "snag_count": stat["snag_count"]
+                })
+        except:
+            continue
+    
+    return {"suggested_authorities": suggested}
+
 @api_router.get("/buildings/{building_name}/previous-authority")
 async def get_previous_authority_for_building(
     building_name: str,
