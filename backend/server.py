@@ -477,17 +477,33 @@ async def create_snag(
     query_no = await get_next_query_no(snag_data.project_name)
     
     # Auto-assign authority from previous snag for this building if not provided
-    assigned_authority_id = snag_data.assigned_authority_id
-    if not assigned_authority_id:
+    # Handle multiple authorities - combine old single ID with new array for backward compatibility
+    assigned_authority_ids = list(snag_data.assigned_authority_ids) if snag_data.assigned_authority_ids else []
+    
+    # If old single authority ID is provided and not in array, add it
+    if snag_data.assigned_authority_id and snag_data.assigned_authority_id not in assigned_authority_ids:
+        assigned_authority_ids.append(snag_data.assigned_authority_id)
+    
+    # If no authorities assigned, try to get from last snag for this building
+    if not assigned_authority_ids:
         last_snag = await db.snags.find_one(
             {
                 "project_name": snag_data.project_name,
-                "assigned_authority_id": {"$exists": True, "$ne": None}
+                "$or": [
+                    {"assigned_authority_ids": {"$exists": True, "$ne": []}},
+                    {"assigned_authority_id": {"$exists": True, "$ne": None}}
+                ]
             },
             sort=[("created_at", -1)]
         )
-        if last_snag and last_snag.get("assigned_authority_id"):
-            assigned_authority_id = last_snag["assigned_authority_id"]
+        if last_snag:
+            if last_snag.get("assigned_authority_ids"):
+                assigned_authority_ids = last_snag["assigned_authority_ids"]
+            elif last_snag.get("assigned_authority_id"):
+                assigned_authority_ids = [last_snag["assigned_authority_id"]]
+    
+    # For backward compatibility, set single authority ID to first in list
+    assigned_authority_id = assigned_authority_ids[0] if assigned_authority_ids else None
     
     snag_dict = {
         "query_no": query_no,
@@ -501,7 +517,8 @@ async def create_snag(
         "priority": snag_data.priority,
         "cost_estimate": snag_data.cost_estimate,
         "assigned_contractor_id": snag_data.assigned_contractor_id,
-        "assigned_authority_id": assigned_authority_id,
+        "assigned_authority_id": assigned_authority_id,  # Backward compatibility
+        "assigned_authority_ids": assigned_authority_ids,  # New: multiple authorities
         "due_date": snag_data.due_date,
         "authority_feedback": None,
         "authority_comment": None,
@@ -535,29 +552,38 @@ async def create_snag(
             "message": f"New snag #{query_no} assigned to you at {snag_data.project_name} - {snag_data.location}"
         })
     
-    # Send notification to assigned authority
-    if assigned_authority_id:
-        notification_recipients.append(assigned_authority_id)
-        await send_notification(
-            assigned_authority_id,
-            snag_id,
-            f"New snag #{query_no} created at {snag_data.project_name} - {snag_data.location} (You are the assigned authority)"
-        )
-        await broadcast_notification(assigned_authority_id, {
-            "snag_id": snag_id,
-            "message": f"New snag #{query_no} created at {snag_data.project_name} - You are the assigned authority"
-        })
+    # Send notification to all assigned authorities
+    for auth_id in assigned_authority_ids:
+        if auth_id not in notification_recipients:
+            notification_recipients.append(auth_id)
+            await send_notification(
+                auth_id,
+                snag_id,
+                f"New snag #{query_no} created at {snag_data.project_name} - {snag_data.location} (You are an assigned authority)"
+            )
+            await broadcast_notification(auth_id, {
+                "snag_id": snag_id,
+                "message": f"New snag #{query_no} created at {snag_data.project_name} - You are an assigned authority"
+            })
     
-    # Get contractor and authority names
+    # Get contractor name
     contractor_name = None
     if snag_data.assigned_contractor_id:
         contractor = await db.users.find_one({"_id": ObjectId(snag_data.assigned_contractor_id)})
         contractor_name = contractor["name"] if contractor else None
     
-    authority_name = None
-    if assigned_authority_id:
-        authority = await db.users.find_one({"_id": ObjectId(assigned_authority_id)})
-        authority_name = authority["name"] if authority else None
+    # Get all authority names
+    authority_names = []
+    for auth_id in assigned_authority_ids:
+        try:
+            authority = await db.users.find_one({"_id": ObjectId(auth_id)})
+            if authority:
+                authority_names.append(authority["name"])
+        except:
+            pass
+    
+    # Backward compatibility: first authority name
+    authority_name = authority_names[0] if authority_names else None
     
     snag_response = SnagResponse(
         id=snag_id,
