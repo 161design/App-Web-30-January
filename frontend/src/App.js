@@ -1755,6 +1755,7 @@ function SnagsPage() {
                     <th>Status</th>
                     <th>Priority</th>
                     <th>Contractor</th>
+                    <th>Authorities</th>
                     <th>Photos</th>
                     <th>Actions</th>
                   </tr>
@@ -1769,6 +1770,26 @@ function SnagsPage() {
                       <td><StatusBadge status={snag.status} /></td>
                       <td><PriorityBadge priority={snag.priority} /></td>
                       <td>{snag.assigned_contractor_name || '-'}</td>
+                      <td>
+                        {snag.assigned_authority_names && snag.assigned_authority_names.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {snag.assigned_authority_names.slice(0, 2).map((name, idx) => (
+                              <span key={idx} className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded">
+                                {name}
+                              </span>
+                            ))}
+                            {snag.assigned_authority_names.length > 2 && (
+                              <span className="text-xs text-muted-foreground">
+                                +{snag.assigned_authority_names.length - 2}
+                              </span>
+                            )}
+                          </div>
+                        ) : snag.assigned_authority_name ? (
+                          <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded">
+                            {snag.assigned_authority_name}
+                          </span>
+                        ) : '-'}
+                      </td>
                       <td>
                         {snag.photos?.length > 0 ? (
                           <span className="text-muted-foreground flex items-center gap-1">
