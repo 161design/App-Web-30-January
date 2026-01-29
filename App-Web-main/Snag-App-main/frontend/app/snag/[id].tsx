@@ -38,6 +38,8 @@ interface Snag {
   assigned_contractor_name?: string;
   assigned_authority_id?: string;
   assigned_authority_name?: string;
+  assigned_authority_ids?: string[];
+  assigned_authority_names?: string[];
   due_date?: string;
   authority_feedback?: string;
   authority_comment?: string;
@@ -56,6 +58,11 @@ interface Contractor {
   id: string;
   name: string;
   email: string;
+}
+
+interface Authority {
+  id: string;
+  name: string;
 }
 
 export default function SnagDetailScreen() {
