@@ -2052,10 +2052,17 @@ function CreateSnagModal({ projects, onClose, onCreated }) {
             </div>
           </div>
           
-          {/* Assign Authority with Auto-Suggest */}
+          {/* Assign Authority with Auto-Suggest - Checkboxes */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="label mb-0">Assign Responsible Authority</label>
+              <label className="label mb-0">
+                Assign Responsible Authorities 
+                {selectedAuthorityIds.length > 0 && (
+                  <span className="ml-2 text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">
+                    {selectedAuthorityIds.length} selected
+                  </span>
+                )}
+              </label>
               {suggestedAuthorities.length > 0 && (
                 <button
                   type="button"
@@ -2063,7 +2070,7 @@ function CreateSnagModal({ projects, onClose, onCreated }) {
                   className="text-xs bg-primary/10 text-primary px-2 py-1 rounded hover:bg-primary/20 transition-colors flex items-center gap-1"
                   data-testid="auto-assign-btn"
                 >
-                  <Icons.Zap /> Auto-Assign
+                  <Icons.Zap /> Auto-Assign All
                 </button>
               )}
             </div>
@@ -2077,7 +2084,7 @@ function CreateSnagModal({ projects, onClose, onCreated }) {
             )}
             
             {suggestedAuthorities.length > 0 && !loadingSuggestions && (
-              <div className="mb-2 p-2 bg-primary/5 border border-primary/20 rounded-sm">
+              <div className="mb-3 p-2 bg-primary/5 border border-primary/20 rounded-sm">
                 <p className="text-xs text-primary font-medium mb-2 flex items-center gap-1">
                   <Icons.Sparkles /> Suggested based on building history:
                 </p>
@@ -2086,13 +2093,19 @@ function CreateSnagModal({ projects, onClose, onCreated }) {
                     <button
                       key={auth.id}
                       type="button"
-                      onClick={() => setFormData({ ...formData, assigned_authority_id: auth.id })}
-                      className={`text-xs px-2 py-1 rounded border transition-all ${
-                        formData.assigned_authority_id === auth.id
+                      onClick={() => toggleAuthority(auth.id)}
+                      className={`text-xs px-2 py-1 rounded border transition-all flex items-center gap-1 ${
+                        selectedAuthorityIds.includes(auth.id)
                           ? 'bg-primary text-primary-foreground border-primary'
                           : 'bg-card text-foreground border-border hover:border-primary'
                       }`}
                     >
+                      <input 
+                        type="checkbox" 
+                        checked={selectedAuthorityIds.includes(auth.id)}
+                        onChange={() => {}}
+                        className="w-3 h-3"
+                      />
                       {auth.name} ({auth.snag_count} snags)
                     </button>
                   ))}
@@ -2100,17 +2113,59 @@ function CreateSnagModal({ projects, onClose, onCreated }) {
               </div>
             )}
             
-            <select
-              value={formData.assigned_authority_id}
-              onChange={(e) => setFormData({ ...formData, assigned_authority_id: e.target.value })}
-              className="input-field w-full"
-              data-testid="input-authority"
-            >
-              <option value="">Not Assigned</option>
-              {authorities.map((a) => (
-                <option key={a.id} value={a.id}>{a.name}</option>
-              ))}
-            </select>
+            {/* All Authorities Checkbox List */}
+            <div className="border border-border rounded-sm max-h-40 overflow-y-auto">
+              {authorities.length === 0 ? (
+                <p className="p-3 text-sm text-muted-foreground text-center">No authorities available</p>
+              ) : (
+                authorities.map((authority) => (
+                  <label 
+                    key={authority.id}
+                    className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-muted/50 border-b border-border last:border-b-0 transition-colors ${
+                      selectedAuthorityIds.includes(authority.id) ? 'bg-primary/5' : ''
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedAuthorityIds.includes(authority.id)}
+                      onChange={() => toggleAuthority(authority.id)}
+                      className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
+                      data-testid={`authority-checkbox-${authority.id}`}
+                    />
+                    <span className={`text-sm ${selectedAuthorityIds.includes(authority.id) ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>
+                      {authority.name}
+                    </span>
+                    {selectedAuthorityIds.includes(authority.id) && (
+                      <Icons.Check />
+                    )}
+                  </label>
+                ))
+              )}
+            </div>
+            
+            {/* Selected Authorities Tags */}
+            {selectedAuthorityIds.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1">
+                {selectedAuthorityIds.map(id => {
+                  const auth = authorities.find(a => a.id === id);
+                  return auth ? (
+                    <span 
+                      key={id}
+                      className="inline-flex items-center gap-1 text-xs bg-primary/10 text-primary px-2 py-1 rounded-full"
+                    >
+                      {auth.name}
+                      <button
+                        type="button"
+                        onClick={() => toggleAuthority(id)}
+                        className="hover:bg-primary/20 rounded-full p-0.5"
+                      >
+                        <Icons.X />
+                      </button>
+                    </span>
+                  ) : null;
+                })}
+              </div>
+            )}
           </div>
           
           <div>
