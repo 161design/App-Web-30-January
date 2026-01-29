@@ -1832,6 +1832,7 @@ function CreateSnagModal({ projects, onClose, onCreated }) {
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [loading, setLoading] = useState(false);
   const [photos, setPhotos] = useState([]);
+  const [selectedAuthorityIds, setSelectedAuthorityIds] = useState([]);
   const [formData, setFormData] = useState({
     description: '',
     location: '',
@@ -1841,7 +1842,6 @@ function CreateSnagModal({ projects, onClose, onCreated }) {
     priority: 'medium',
     cost_estimate: '',
     assigned_contractor_id: '',
-    assigned_authority_id: '',
     due_date: '',
   });
 
