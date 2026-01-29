@@ -126,3 +126,27 @@ Property Management Construction (PMC) Snag List application for tracking and ma
 ### Test Data
 - Authority user: authority1@pmc.com / auth123
 - Building A has 5+ snags with authority assigned (for suggestions)
+
+## Multiple Authorities Selection (Jan 29, 2026)
+
+### Feature Description
+Allows selecting multiple responsible authorities for a single snag using checkboxes instead of a single dropdown.
+
+### Backend Changes
+- **New field**: `assigned_authority_ids: List[str]` - Array of authority IDs
+- **New field**: `assigned_authority_names: List[str]` - Array of authority names
+- **Backward compatibility**: Old `assigned_authority_id` field still supported
+- Updated snag create, get, and list endpoints
+
+### Web App UI
+- **Checkbox list** - All authorities shown with checkboxes
+- **Selected count badge** - Shows "X selected" next to label
+- **Auto-Assign All** button - Selects all suggested authorities
+- **Removable tags** - Selected authorities shown as chips with X button
+- **Snag table** - New "Authorities" column showing multiple authority tags
+
+### Mobile App Updates
+- Same checkbox selection UI
+- Radio buttons replaced with checkboxes
+- Suggested authorities with selection
+- Auto-assign functionality
