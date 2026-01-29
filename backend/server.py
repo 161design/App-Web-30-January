@@ -137,7 +137,8 @@ class SnagCreate(BaseModel):
     priority: str = SnagPriority.MEDIUM
     cost_estimate: Optional[float] = None
     assigned_contractor_id: Optional[str] = None
-    assigned_authority_id: Optional[str] = None
+    assigned_authority_id: Optional[str] = None  # Deprecated, kept for backward compatibility
+    assigned_authority_ids: List[str] = []  # New: multiple authorities
     due_date: Optional[datetime] = None
 
 class SnagUpdate(BaseModel):
@@ -151,7 +152,8 @@ class SnagUpdate(BaseModel):
     priority: Optional[str] = None
     cost_estimate: Optional[float] = None
     assigned_contractor_id: Optional[str] = None
-    assigned_authority_id: Optional[str] = None
+    assigned_authority_id: Optional[str] = None  # Deprecated, kept for backward compatibility
+    assigned_authority_ids: Optional[List[str]] = None  # New: multiple authorities
     due_date: Optional[datetime] = None
     authority_feedback: Optional[str] = None
     authority_comment: Optional[str] = None
@@ -175,8 +177,10 @@ class SnagResponse(BaseModel):
     cost_estimate: Optional[float]
     assigned_contractor_id: Optional[str]
     assigned_contractor_name: Optional[str]
-    assigned_authority_id: Optional[str]
-    assigned_authority_name: Optional[str]
+    assigned_authority_id: Optional[str]  # Deprecated, kept for backward compatibility
+    assigned_authority_name: Optional[str]  # Deprecated, kept for backward compatibility
+    assigned_authority_ids: List[str] = []  # New: multiple authority IDs
+    assigned_authority_names: List[str] = []  # New: multiple authority names
     due_date: Optional[datetime]
     authority_feedback: Optional[str]
     authority_comment: Optional[str]
