@@ -297,24 +297,60 @@ class PMCSnagListAPITester:
                 return None
         return None
 
-    def test_get_authorities(self):
-        """Test getting authorities list for multiple selection"""
-        success, response = self.run_test(
-            "Get Authorities List",
+    def test_create_snag_with_multiple_authorities(self):
+        """Test creating a snag with multiple authorities"""
+        # First get available authorities
+        success, authorities = self.run_test(
+            "Get Authorities for Multiple Assignment",
             "GET",
             "/api/users/authorities",
             200
         )
+        
+        if not success or len(authorities) < 2:
+            print(f"   ⚠️ Need at least 2 authorities for testing, found {len(authorities) if success else 0}")
+            return None
+        
+        # Select first 2 authorities
+        authority_ids = [auth['id'] for auth in authorities[:2]]
+        authority_names = [auth['name'] for auth in authorities[:2]]
+        
+        snag_data = {
+            "description": "Test snag with multiple authorities",
+            "location": "Test Floor 3, Room 301",
+            "project_name": "Building A",
+            "possible_solution": "Test multiple authority assignment",
+            "priority": "medium",
+            "cost_estimate": 300.00,
+            "assigned_authority_ids": authority_ids,
+            "photos": []
+        }
+        
+        success, response = self.run_test(
+            "Create Snag with Multiple Authorities",
+            "POST",
+            "/api/snags",
+            200,
+            data=snag_data
+        )
+        
         if success:
-            print(f"   Found {len(response)} authorities")
-            if len(response) > 0:
-                auth = response[0]
-                required_fields = ['id', 'name', 'email', 'role']
-                for field in required_fields:
-                    if field not in auth:
-                        print(f"❌ Missing field in authority: {field}")
-                        return False
-        return success
+            snag_id = response.get('id')
+            returned_authority_ids = response.get('assigned_authority_ids', [])
+            returned_authority_names = response.get('assigned_authority_names', [])
+            
+            print(f"   Created snag with ID: {snag_id}")
+            print(f"   Assigned authority IDs: {returned_authority_ids}")
+            print(f"   Assigned authority names: {returned_authority_names}")
+            
+            # Verify multiple authorities were saved correctly
+            if len(returned_authority_ids) >= 2 and len(returned_authority_names) >= 2:
+                print(f"   ✅ Multiple authorities saved successfully")
+                return snag_id
+            else:
+                print(f"   ❌ Multiple authorities not saved properly")
+                return None
+        return None
 
     def test_create_authority_users(self):
         """Create additional authority users for testing multiple selection"""
