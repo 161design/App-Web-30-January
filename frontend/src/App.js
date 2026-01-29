@@ -1895,9 +1895,18 @@ function CreateSnagModal({ projects, onClose, onCreated }) {
 
   const handleAutoAssign = () => {
     if (suggestedAuthorities.length > 0) {
-      // Auto-assign the top suggested authority
-      setFormData({ ...formData, assigned_authority_id: suggestedAuthorities[0].id });
+      // Auto-assign all suggested authorities
+      const suggestedIds = suggestedAuthorities.map(a => a.id);
+      setSelectedAuthorityIds(suggestedIds);
     }
+  };
+
+  const toggleAuthority = (authorityId) => {
+    setSelectedAuthorityIds(prev => 
+      prev.includes(authorityId) 
+        ? prev.filter(id => id !== authorityId)
+        : [...prev, authorityId]
+    );
   };
 
   const handleSubmit = async (e) => {
@@ -1910,7 +1919,7 @@ function CreateSnagModal({ projects, onClose, onCreated }) {
         cost_estimate: formData.cost_estimate ? parseFloat(formData.cost_estimate) : null,
         due_date: formData.due_date ? new Date(formData.due_date).toISOString() : null,
         assigned_contractor_id: formData.assigned_contractor_id || null,
-        assigned_authority_id: formData.assigned_authority_id || null,
+        assigned_authority_ids: selectedAuthorityIds,
       };
       await api.post('/api/snags', payload);
       onCreated();
