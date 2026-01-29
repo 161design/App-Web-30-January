@@ -112,6 +112,36 @@ export default function CreateSnagScreen() {
     }
   };
 
+  const fetchAuthorities = async () => {
+    try {
+      const response = await axios.get(`${BACKEND_URL}/api/users/authorities`);
+      setAuthorities(response.data);
+    } catch (error) {
+      console.error('Error fetching authorities:', error);
+    }
+  };
+
+  const fetchSuggestedAuthorities = async (buildingName: string) => {
+    if (!buildingName) return;
+    setIsLoadingSuggestions(true);
+    try {
+      const response = await axios.get(`${BACKEND_URL}/api/buildings/${encodeURIComponent(buildingName)}/suggested-authorities`);
+      setSuggestedAuthorities(response.data.suggested_authorities || []);
+    } catch (error) {
+      console.error('Error fetching suggested authorities:', error);
+      setSuggestedAuthorities([]);
+    } finally {
+      setIsLoadingSuggestions(false);
+    }
+  };
+
+  const handleAutoAssign = () => {
+    if (suggestedAuthorities.length > 0) {
+      setAssignedAuthorityId(suggestedAuthorities[0].id);
+      Alert.alert('Auto-Assigned', `Authority "${suggestedAuthorities[0].name}" has been assigned based on building history.`);
+    }
+  };
+
   const fetchCurrentLocation = async () => {
     setIsLoadingLocation(true);
     try {
