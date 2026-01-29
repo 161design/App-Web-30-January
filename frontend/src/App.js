@@ -1841,10 +1841,13 @@ function CreateSnagModal({ projects, onClose, onCreated }) {
     loadAuthorities();
   }, []);
 
-  // Fetch suggested authorities when project changes
+  // Fetch suggested authorities when project changes (with debounce)
   useEffect(() => {
-    if (formData.project_name) {
-      fetchSuggestedAuthorities(formData.project_name);
+    if (formData.project_name && formData.project_name.length >= 3) {
+      const timer = setTimeout(() => {
+        fetchSuggestedAuthorities(formData.project_name);
+      }, 500);
+      return () => clearTimeout(timer);
     } else {
       setSuggestedAuthorities([]);
     }
