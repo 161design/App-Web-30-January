@@ -1820,6 +1820,9 @@ function SnagsPage() {
 // Create Snag Modal
 function CreateSnagModal({ projects, onClose, onCreated }) {
   const [contractors, setContractors] = useState([]);
+  const [authorities, setAuthorities] = useState([]);
+  const [suggestedAuthorities, setSuggestedAuthorities] = useState([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [loading, setLoading] = useState(false);
   const [photos, setPhotos] = useState([]);
   const [formData, setFormData] = useState({
@@ -1831,12 +1834,23 @@ function CreateSnagModal({ projects, onClose, onCreated }) {
     priority: 'medium',
     cost_estimate: '',
     assigned_contractor_id: '',
+    assigned_authority_id: '',
     due_date: '',
   });
 
   useEffect(() => {
     loadContractors();
+    loadAuthorities();
   }, []);
+
+  // Fetch suggested authorities when project changes
+  useEffect(() => {
+    if (formData.project_name) {
+      fetchSuggestedAuthorities(formData.project_name);
+    } else {
+      setSuggestedAuthorities([]);
+    }
+  }, [formData.project_name]);
 
   const loadContractors = async () => {
     try {
@@ -1844,6 +1858,35 @@ function CreateSnagModal({ projects, onClose, onCreated }) {
       setContractors(data);
     } catch (err) {
       console.error('Failed to load contractors:', err);
+    }
+  };
+
+  const loadAuthorities = async () => {
+    try {
+      const data = await api.get('/api/users/authorities');
+      setAuthorities(data);
+    } catch (err) {
+      console.error('Failed to load authorities:', err);
+    }
+  };
+
+  const fetchSuggestedAuthorities = async (projectName) => {
+    setLoadingSuggestions(true);
+    try {
+      const data = await api.get(`/api/buildings/${encodeURIComponent(projectName)}/suggested-authorities`);
+      setSuggestedAuthorities(data.suggested_authorities || []);
+    } catch (err) {
+      console.error('Failed to fetch suggested authorities:', err);
+      setSuggestedAuthorities([]);
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  };
+
+  const handleAutoAssign = () => {
+    if (suggestedAuthorities.length > 0) {
+      // Auto-assign the top suggested authority
+      setFormData({ ...formData, assigned_authority_id: suggestedAuthorities[0].id });
     }
   };
 
@@ -1857,6 +1900,7 @@ function CreateSnagModal({ projects, onClose, onCreated }) {
         cost_estimate: formData.cost_estimate ? parseFloat(formData.cost_estimate) : null,
         due_date: formData.due_date ? new Date(formData.due_date).toISOString() : null,
         assigned_contractor_id: formData.assigned_contractor_id || null,
+        assigned_authority_id: formData.assigned_authority_id || null,
       };
       await api.post('/api/snags', payload);
       onCreated();
@@ -1978,15 +2022,76 @@ function CreateSnagModal({ projects, onClose, onCreated }) {
               </select>
             </div>
             <div>
-              <label className="label">Due Date</label>
-              <input
-                type="date"
+              <label className="label flex items-center gap-2">
+                <Icons.Calendar /> Due Date
+              </label>
+              <DatePickerCalendar
                 value={formData.due_date}
-                onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                className="input-field w-full"
-                data-testid="input-due-date"
+                onChange={(val) => setFormData({ ...formData, due_date: val })}
+                minDate={new Date().toISOString().split('T')[0]}
               />
             </div>
+          </div>
+          
+          {/* Assign Authority with Auto-Suggest */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="label mb-0">Assign Responsible Authority</label>
+              {suggestedAuthorities.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleAutoAssign}
+                  className="text-xs bg-primary/10 text-primary px-2 py-1 rounded hover:bg-primary/20 transition-colors flex items-center gap-1"
+                  data-testid="auto-assign-btn"
+                >
+                  <Icons.Zap /> Auto-Assign
+                </button>
+              )}
+            </div>
+            
+            {/* Suggested Authorities */}
+            {loadingSuggestions && (
+              <div className="text-xs text-muted-foreground mb-2 flex items-center gap-2">
+                <div className="w-3 h-3 border border-primary border-t-transparent rounded-full animate-spin" />
+                Analyzing building history...
+              </div>
+            )}
+            
+            {suggestedAuthorities.length > 0 && !loadingSuggestions && (
+              <div className="mb-2 p-2 bg-primary/5 border border-primary/20 rounded-sm">
+                <p className="text-xs text-primary font-medium mb-2 flex items-center gap-1">
+                  <Icons.Sparkles /> Suggested based on building history:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {suggestedAuthorities.map((auth) => (
+                    <button
+                      key={auth.id}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, assigned_authority_id: auth.id })}
+                      className={`text-xs px-2 py-1 rounded border transition-all ${
+                        formData.assigned_authority_id === auth.id
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'bg-card text-foreground border-border hover:border-primary'
+                      }`}
+                    >
+                      {auth.name} ({auth.snag_count} snags)
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            <select
+              value={formData.assigned_authority_id}
+              onChange={(e) => setFormData({ ...formData, assigned_authority_id: e.target.value })}
+              className="input-field w-full"
+              data-testid="input-authority"
+            >
+              <option value="">Not Assigned</option>
+              {authorities.map((a) => (
+                <option key={a.id} value={a.id}>{a.name}</option>
+              ))}
+            </select>
           </div>
           
           <div>
