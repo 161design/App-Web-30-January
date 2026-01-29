@@ -97,6 +97,7 @@ export default function SnagDetailScreen() {
   useEffect(() => {
     fetchSnag();
     fetchContractors();
+    fetchAuthorities();
   }, []);
 
   const fetchContractors = async () => {
@@ -108,12 +109,24 @@ export default function SnagDetailScreen() {
     }
   };
 
+  const fetchAuthorities = async () => {
+    try {
+      const response = await axios.get(`${BACKEND_URL}/api/users/authorities`);
+      setAuthorities(response.data);
+    } catch (error) {
+      console.error('Error fetching authorities:', error);
+    }
+  };
+
   const fetchSnag = async () => {
     try {
       const response = await axios.get(`${BACKEND_URL}/api/snags/${id}`);
       setSnag(response.data);
       setFeedback(response.data.authority_feedback || '');
       setAuthorityComment(response.data.authority_comment || '');
+      // Set selected authorities from snag data
+      setSelectedAuthorityIds(response.data.assigned_authority_ids || 
+        (response.data.assigned_authority_id ? [response.data.assigned_authority_id] : []));
       if (response.data.contractor_completion_date) {
         setContractorCompletionDate(new Date(response.data.contractor_completion_date));
       }
@@ -123,6 +136,14 @@ export default function SnagDetailScreen() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const toggleAuthority = (authorityId: string) => {
+    setSelectedAuthorityIds(prev => 
+      prev.includes(authorityId) 
+        ? prev.filter(id => id !== authorityId)
+        : [...prev, authorityId]
+    );
   };
 
   const startEditing = () => {
