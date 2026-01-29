@@ -1,0 +1,52 @@
+{
+  "summary": "Completed testing of Calendar UI and Auto-Assign Authorities features. Calendar picker functionality works correctly with proper DD/MM/YYYY format, month navigation, and date selection. Backend API for suggested authorities returns correct data with snag counts. Some frontend integration issues found with Auto-Assign button visibility.",
+  
+  "backend_issues": {
+    "critical_bugs": [],
+    "flaky_endpoints": []
+  },
+  
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "CreateSnagModal - Auto-Assign Section",
+        "issue": "Auto-Assign button not consistently visible in create modal despite Building A having historical data",
+        "selector": "button:has-text('Auto-Assign')",
+        "fix_priority": "MEDIUM"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "Auto-Assign authorities integration",
+        "issue": "Auto-Assign button appears inconsistently when building has history",
+        "affected_selectors": ["button:has-text('Auto-Assign')", "[data-testid='auto-assign-btn']"]
+      }
+    ]
+  },
+  
+  "passed_tests": [
+    "Backend API: /api/buildings/Building A/suggested-authorities returns correct data",
+    "Backend API: /api/buildings/Building A/previous-authority returns authority info", 
+    "Backend API: Create snag with due date saves correctly",
+    "Calendar UI: Calendar popup opens when clicking calendar icon",
+    "Calendar UI: Calendar shows month/year with navigation arrows",
+    "Calendar UI: Date selection works and populates DD/MM/YYYY format",
+    "Calendar UI: Clear date button works",
+    "Calendar UI: Month navigation (next/previous) works",
+    "Backend API: Suggested authorities endpoint returns John Authority with 6 snags"
+  ],
+  
+  "test_report_links": ["/app/backend_test.py"],
+  
+  "success_percentage": {
+    "backend": "100% - All API endpoints working correctly",
+    "frontend": "80% - Calendar fully functional, Auto-Assign partially working"
+  },
+  
+  "updated_files": ["/app/backend_test.py"],
+  
+  "action_item_for_main_agent": "Fix Auto-Assign button visibility issue in create snag modal. The button should consistently appear when a building has historical snag data. Backend API works correctly but frontend integration needs adjustment.",
+  
+  "should_call_test_agent_after_fix": "false",
+  "should_main_agent_test_itself": "true"
+}
