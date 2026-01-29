@@ -263,10 +263,14 @@ function WebSocketProvider({ children }) {
         console.log('WebSocket connected');
         setIsConnected(true);
         
-        // Authenticate with token
+        // Authenticate with token only when connection is OPEN
         const token = localStorage.getItem('authToken');
-        if (token) {
-          wsRef.current.send(JSON.stringify({ type: 'auth', token }));
+        if (token && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+          try {
+            wsRef.current.send(JSON.stringify({ type: 'auth', token }));
+          } catch (e) {
+            console.error('Failed to send auth message:', e);
+          }
         }
       };
       
