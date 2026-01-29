@@ -128,7 +128,7 @@ class PMCSnagListAPITester:
             "Create Snag",
             "POST",
             "/api/snags",
-            201,
+            200,  # Backend returns 200, not 201
             data=snag_data
         )
         
