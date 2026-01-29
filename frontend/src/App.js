@@ -254,7 +254,12 @@ function WebSocketProvider({ children }) {
       console.log('WebSocket URL not configured');
       return;
     }
-    if (wsRef.current?.readyState === WebSocket.OPEN) return;
+    
+    // Don't reconnect if already connected or connecting
+    if (wsRef.current) {
+      if (wsRef.current.readyState === WebSocket.OPEN) return;
+      if (wsRef.current.readyState === WebSocket.CONNECTING) return;
+    }
     
     try {
       wsRef.current = new WebSocket(WS_URL);
