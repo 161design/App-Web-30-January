@@ -601,6 +601,8 @@ async def create_snag(
         assigned_contractor_name=contractor_name,
         assigned_authority_id=assigned_authority_id,
         assigned_authority_name=authority_name,
+        assigned_authority_ids=assigned_authority_ids,
+        assigned_authority_names=authority_names,
         due_date=snag_data.due_date,
         authority_feedback=None,
         authority_comment=None,
