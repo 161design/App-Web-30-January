@@ -250,6 +250,7 @@ export default function CreateSnagScreen() {
         photos,
         cost_estimate: costEstimate ? parseFloat(costEstimate) : null,
         assigned_contractor_id: assignedContractorId || null,
+        assigned_authority_id: assignedAuthorityId || null,
         due_date: dueDateISO,
       };
 
