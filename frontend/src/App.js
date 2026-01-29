@@ -615,6 +615,17 @@ function PriorityBadge({ priority }) {
   );
 }
 
+// Chart Colors
+const CHART_COLORS = {
+  open: '#ef4444',
+  in_progress: '#f59e0b',
+  resolved: '#22c55e',
+  verified: '#3b82f6',
+  high: '#ef4444',
+  medium: '#f59e0b',
+  low: '#22c55e'
+};
+
 // Dashboard Page
 function DashboardPage() {
   const [stats, setStats] = useState(null);
@@ -658,11 +669,12 @@ function DashboardPage() {
       snagsData.forEach(snag => {
         const project = snag.project_name || 'Uncategorized';
         if (!projectMap[project]) {
-          projectMap[project] = { total: 0, open: 0, resolved: 0, lastQueryNo: 0 };
+          projectMap[project] = { total: 0, open: 0, resolved: 0, in_progress: 0, lastQueryNo: 0 };
         }
         projectMap[project].total++;
         if (snag.status === 'open') projectMap[project].open++;
         if (snag.status === 'resolved') projectMap[project].resolved++;
+        if (snag.status === 'in_progress') projectMap[project].in_progress++;
         if (snag.query_no > projectMap[project].lastQueryNo) {
           projectMap[project].lastQueryNo = snag.query_no;
         }
@@ -674,6 +686,31 @@ function DashboardPage() {
       setLoading(false);
     }
   };
+
+  // Prepare chart data
+  const statusChartData = useMemo(() => {
+    if (!stats) return [];
+    return [
+      { name: 'Open', value: stats.open_snags, color: CHART_COLORS.open },
+      { name: 'In Progress', value: stats.in_progress_snags, color: CHART_COLORS.in_progress },
+      { name: 'Resolved', value: stats.resolved_snags, color: CHART_COLORS.resolved },
+      { name: 'Verified', value: stats.verified_snags, color: CHART_COLORS.verified },
+    ].filter(item => item.value > 0);
+  }, [stats]);
+
+  const priorityChartData = useMemo(() => {
+    if (!stats || !stats.total_snags) return [];
+    // Calculate from projectStats or estimate
+    const high = stats.high_priority || 0;
+    const remaining = stats.total_snags - high;
+    const medium = Math.floor(remaining * 0.6);
+    const low = remaining - medium;
+    return [
+      { name: 'High', value: high, fill: CHART_COLORS.high },
+      { name: 'Medium', value: medium, fill: CHART_COLORS.medium },
+      { name: 'Low', value: low, fill: CHART_COLORS.low },
+    ].filter(item => item.value > 0);
+  }, [stats]);
 
   const statCards = [
     { label: 'Total Snags', value: stats?.total_snags || 0, color: 'text-foreground', icon: Icons.List },
@@ -705,6 +742,80 @@ function DashboardPage() {
           </div>
         ))}
       </div>
+      
+      {/* Charts Section */}
+      {stats && stats.total_snags > 0 && (
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Status Pie Chart */}
+          <div className="card p-6">
+            <h3 className="font-heading text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+              <Icons.List /> Status Distribution
+            </h3>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={statusChartData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={90}
+                    paddingAngle={2}
+                    dataKey="value"
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    labelLine={false}
+                  >
+                    {statusChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--card))', 
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '4px'
+                    }}
+                  />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          
+          {/* Building-wise Bar Chart */}
+          {projectStats.length > 0 && (
+            <div className="card p-6">
+              <h3 className="font-heading text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Icons.Building /> Snags by Building
+              </h3>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={projectStats} layout="vertical" margin={{ left: 20, right: 20 }}>
+                    <XAxis type="number" />
+                    <YAxis 
+                      type="category" 
+                      dataKey="name" 
+                      width={100}
+                      tick={{ fontSize: 12 }}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))', 
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '4px'
+                      }}
+                    />
+                    <Legend />
+                    <Bar dataKey="open" name="Open" stackId="a" fill={CHART_COLORS.open} />
+                    <Bar dataKey="in_progress" name="In Progress" stackId="a" fill={CHART_COLORS.in_progress} />
+                    <Bar dataKey="resolved" name="Resolved" stackId="a" fill={CHART_COLORS.resolved} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
       
       {/* Building-wise Stats */}
       {projectStats.length > 0 && (
