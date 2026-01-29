@@ -464,6 +464,87 @@ export default function CreateSnagScreen() {
           </View>
         </View>
 
+        {/* Assign Authority with Auto-Suggest */}
+        <View style={styles.section}>
+          <View style={styles.authorityHeader}>
+            <Text style={styles.label}>Assign Responsible Authority</Text>
+            {suggestedAuthorities.length > 0 && (
+              <TouchableOpacity style={styles.autoAssignButton} onPress={handleAutoAssign}>
+                <Ionicons name="flash" size={14} color="#366092" />
+                <Text style={styles.autoAssignText}>Auto-Assign</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+          
+          {/* Suggested Authorities */}
+          {isLoadingSuggestions && (
+            <View style={styles.loadingSuggestions}>
+              <ActivityIndicator size="small" color="#366092" />
+              <Text style={styles.loadingSuggestionsText}>Analyzing building history...</Text>
+            </View>
+          )}
+          
+          {suggestedAuthorities.length > 0 && !isLoadingSuggestions && (
+            <View style={styles.suggestedContainer}>
+              <View style={styles.suggestedHeader}>
+                <Ionicons name="sparkles" size={14} color="#366092" />
+                <Text style={styles.suggestedHeaderText}>Suggested based on building history:</Text>
+              </View>
+              <View style={styles.suggestedList}>
+                {suggestedAuthorities.map((auth) => (
+                  <TouchableOpacity
+                    key={auth.id}
+                    style={[
+                      styles.suggestedItem,
+                      assignedAuthorityId === auth.id && styles.suggestedItemSelected,
+                    ]}
+                    onPress={() => setAssignedAuthorityId(auth.id)}
+                  >
+                    <Text style={[
+                      styles.suggestedItemText,
+                      assignedAuthorityId === auth.id && styles.suggestedItemTextSelected,
+                    ]}>
+                      {auth.name} ({auth.snag_count} snags)
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+          
+          <View style={styles.contractorList}>
+            <TouchableOpacity
+              style={[
+                styles.contractorOption,
+                !assignedAuthorityId && styles.contractorOptionSelected,
+              ]}
+              onPress={() => setAssignedAuthorityId('')}
+            >
+              <View style={styles.radioButton}>
+                {!assignedAuthorityId && <View style={styles.radioButtonSelected} />}
+              </View>
+              <Text style={styles.contractorName}>None</Text>
+            </TouchableOpacity>
+            {authorities.map((authority) => (
+              <TouchableOpacity
+                key={authority.id}
+                style={[
+                  styles.contractorOption,
+                  assignedAuthorityId === authority.id && styles.contractorOptionSelected,
+                ]}
+                onPress={() => setAssignedAuthorityId(authority.id)}
+              >
+                <View style={styles.radioButton}>
+                  {assignedAuthorityId === authority.id && (
+                    <View style={styles.radioButtonSelected} />
+                  )}
+                </View>
+                <Text style={styles.contractorName}>{authority.name}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
         <View style={styles.section}>
           <Text style={styles.label}>Due Date</Text>
           <View style={styles.datePickerContainer}>
