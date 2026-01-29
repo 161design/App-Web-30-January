@@ -635,7 +635,12 @@ async def get_snags(
     if current_user["role"] == UserRole.CONTRACTOR:
         query["assigned_contractor_id"] = str(current_user["_id"])
     elif current_user["role"] == UserRole.AUTHORITY:
-        query["assigned_authority_id"] = str(current_user["_id"])
+        # Authority can see snags where they are in either old or new field
+        user_id = str(current_user["_id"])
+        query["$or"] = [
+            {"assigned_authority_id": user_id},
+            {"assigned_authority_ids": user_id}
+        ]
     
     if status:
         query["status"] = status
