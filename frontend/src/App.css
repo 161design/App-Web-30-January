@@ -316,11 +316,11 @@ select.input-field {
 }
 
 .modal-lg {
-  max-width: 700px;
+  max-width: 900px;
 }
 
 .modal-xl {
-  max-width: 900px;
+  max-width: 1100px;
 }
 
 .modal-header {
