@@ -673,6 +673,13 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#999',
   },
+  annotateHint: {
+    fontSize: 12,
+    color: '#366092',
+    textAlign: 'center',
+    marginTop: 8,
+    fontStyle: 'italic',
+  },
   photosGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -686,6 +693,17 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 8,
+  },
+  annotateOverlay: {
+    position: 'absolute',
+    bottom: 4,
+    left: 4,
+    backgroundColor: 'rgba(54, 96, 146, 0.8)',
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   removePhotoButton: {
     position: 'absolute',
