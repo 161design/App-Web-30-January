@@ -121,14 +121,17 @@ export default function CreateSnagScreen() {
     try {
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
+        allowsEditing: false, // Disable default editing, we have our own
         quality: 0.5,
         base64: true,
       });
 
       if (!result.canceled && result.assets[0].base64) {
         const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
+        const newIndex = photos.length;
         setPhotos([...photos, base64Image]);
+        // Open annotation modal for the new photo
+        setAnnotatingPhotoIndex(newIndex);
       }
     } catch (error) {
       console.error('Error taking photo:', error);
@@ -146,19 +149,29 @@ export default function CreateSnagScreen() {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
+        allowsEditing: false, // Disable default editing, we have our own
         quality: 0.5,
         base64: true,
       });
 
       if (!result.canceled && result.assets[0].base64) {
         const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
+        const newIndex = photos.length;
         setPhotos([...photos, base64Image]);
+        // Open annotation modal for the new photo
+        setAnnotatingPhotoIndex(newIndex);
       }
     } catch (error) {
       console.error('Error picking image:', error);
       Alert.alert('Error', 'Failed to pick image');
     }
+  };
+
+  const handleAnnotationSave = (annotatedPhoto: string) => {
+    if (annotatingPhotoIndex !== null) {
+      setPhotos(photos.map((photo, i) => i === annotatingPhotoIndex ? annotatedPhoto : photo));
+    }
+    setAnnotatingPhotoIndex(null);
   };
 
   const removePhoto = (index: number) => {
