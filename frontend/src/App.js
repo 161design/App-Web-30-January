@@ -428,6 +428,266 @@ const compressionOptions = {
   initialQuality: 0.7
 };
 
+// Annotation Colors
+const ANNOTATION_COLORS = [
+  { name: 'Red', value: '#ef4444' },
+  { name: 'Yellow', value: '#eab308' },
+  { name: 'Green', value: '#22c55e' },
+  { name: 'Blue', value: '#3b82f6' },
+  { name: 'White', value: '#ffffff' },
+  { name: 'Black', value: '#000000' },
+];
+
+// Photo Annotation Modal Component
+function PhotoAnnotationModal({ photo, onSave, onClose }) {
+  const canvasRef = useRef(null);
+  const containerRef = useRef(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [startPoint, setStartPoint] = useState(null);
+  const [currentColor, setCurrentColor] = useState('#ef4444'); // Default red
+  const [annotations, setAnnotations] = useState([]);
+  const [tempAnnotation, setTempAnnotation] = useState(null);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+  const imageRef = useRef(new Image());
+
+  // Load image and set canvas size
+  useEffect(() => {
+    const img = imageRef.current;
+    img.onload = () => {
+      const maxWidth = Math.min(800, window.innerWidth - 100);
+      const maxHeight = Math.min(600, window.innerHeight - 300);
+      
+      let width = img.width;
+      let height = img.height;
+      
+      // Scale down if needed
+      if (width > maxWidth) {
+        height = (height * maxWidth) / width;
+        width = maxWidth;
+      }
+      if (height > maxHeight) {
+        width = (width * maxHeight) / height;
+        height = maxHeight;
+      }
+      
+      setCanvasSize({ width, height });
+      setImageLoaded(true);
+    };
+    img.src = photo;
+  }, [photo]);
+
+  // Draw on canvas
+  useEffect(() => {
+    if (!imageLoaded || !canvasRef.current) return;
+    
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const img = imageRef.current;
+    
+    // Clear and draw image
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvasSize.width, canvasSize.height);
+    
+    // Draw saved annotations
+    annotations.forEach(ann => {
+      drawEllipse(ctx, ann);
+    });
+    
+    // Draw temporary annotation while drawing
+    if (tempAnnotation) {
+      drawEllipse(ctx, tempAnnotation);
+    }
+  }, [imageLoaded, annotations, tempAnnotation, canvasSize]);
+
+  const drawEllipse = (ctx, { startX, startY, endX, endY, color }) => {
+    const centerX = (startX + endX) / 2;
+    const centerY = (startY + endY) / 2;
+    const radiusX = Math.abs(endX - startX) / 2;
+    const radiusY = Math.abs(endY - startY) / 2;
+    
+    ctx.beginPath();
+    ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, 2 * Math.PI);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  };
+
+  const getMousePos = (e) => {
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    if (e.touches) {
+      return {
+        x: (e.touches[0].clientX - rect.left) * scaleX,
+        y: (e.touches[0].clientY - rect.top) * scaleY
+      };
+    }
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY
+    };
+  };
+
+  const handleStart = (e) => {
+    e.preventDefault();
+    const pos = getMousePos(e);
+    setIsDrawing(true);
+    setStartPoint(pos);
+  };
+
+  const handleMove = (e) => {
+    if (!isDrawing || !startPoint) return;
+    e.preventDefault();
+    const pos = getMousePos(e);
+    setTempAnnotation({
+      startX: startPoint.x,
+      startY: startPoint.y,
+      endX: pos.x,
+      endY: pos.y,
+      color: currentColor
+    });
+  };
+
+  const handleEnd = (e) => {
+    if (!isDrawing || !startPoint) return;
+    e.preventDefault();
+    
+    const pos = getMousePos(e.changedTouches ? e.changedTouches[0] : e);
+    const newAnnotation = {
+      startX: startPoint.x,
+      startY: startPoint.y,
+      endX: pos.x,
+      endY: pos.y,
+      color: currentColor
+    };
+    
+    // Only add if it has some size
+    if (Math.abs(newAnnotation.endX - newAnnotation.startX) > 5 && 
+        Math.abs(newAnnotation.endY - newAnnotation.startY) > 5) {
+      setAnnotations(prev => [...prev, newAnnotation]);
+    }
+    
+    setIsDrawing(false);
+    setStartPoint(null);
+    setTempAnnotation(null);
+  };
+
+  const handleUndo = () => {
+    setAnnotations(prev => prev.slice(0, -1));
+  };
+
+  const handleClear = () => {
+    setAnnotations([]);
+  };
+
+  const handleSave = () => {
+    const canvas = canvasRef.current;
+    const annotatedImage = canvas.toDataURL('image/jpeg', 0.9);
+    onSave(annotatedImage);
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal modal-lg" onClick={e => e.stopPropagation()} data-testid="annotation-modal">
+        <div className="modal-header">
+          <h2 className="font-heading text-xl font-semibold flex items-center gap-2">
+            <Icons.Edit /> Annotate Photo
+          </h2>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+            <Icons.X />
+          </button>
+        </div>
+        
+        <div className="modal-content">
+          {/* Color Picker */}
+          <div className="flex items-center gap-4 mb-4">
+            <span className="text-sm text-muted-foreground">Color:</span>
+            <div className="flex gap-2">
+              {ANNOTATION_COLORS.map(color => (
+                <button
+                  key={color.value}
+                  onClick={() => setCurrentColor(color.value)}
+                  className={`w-8 h-8 rounded-full border-2 transition-all ${
+                    currentColor === color.value ? 'border-primary scale-110' : 'border-border'
+                  }`}
+                  style={{ backgroundColor: color.value }}
+                  title={color.name}
+                  data-testid={`color-${color.name.toLowerCase()}`}
+                />
+              ))}
+            </div>
+            <div className="flex-1" />
+            <button 
+              onClick={handleUndo} 
+              className="btn-outline text-sm"
+              disabled={annotations.length === 0}
+              data-testid="undo-btn"
+            >
+              <Icons.Undo /> Undo
+            </button>
+            <button 
+              onClick={handleClear} 
+              className="btn-outline text-sm"
+              disabled={annotations.length === 0}
+              data-testid="clear-btn"
+            >
+              <Icons.Trash /> Clear
+            </button>
+          </div>
+          
+          {/* Instructions */}
+          <p className="text-xs text-muted-foreground mb-3">
+            Draw circles/ellipses by clicking and dragging on the image. Choose color above.
+          </p>
+          
+          {/* Canvas Container */}
+          <div 
+            ref={containerRef}
+            className="flex justify-center bg-muted/50 rounded-sm p-2 overflow-auto"
+            style={{ maxHeight: '60vh' }}
+          >
+            {imageLoaded ? (
+              <canvas
+                ref={canvasRef}
+                width={canvasSize.width}
+                height={canvasSize.height}
+                onMouseDown={handleStart}
+                onMouseMove={handleMove}
+                onMouseUp={handleEnd}
+                onMouseLeave={handleEnd}
+                onTouchStart={handleStart}
+                onTouchMove={handleMove}
+                onTouchEnd={handleEnd}
+                className="cursor-crosshair border border-border rounded-sm"
+                style={{ touchAction: 'none' }}
+                data-testid="annotation-canvas"
+              />
+            ) : (
+              <div className="flex items-center justify-center h-64">
+                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+          </div>
+          
+          {/* Actions */}
+          <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-border">
+            <button onClick={onClose} className="btn-outline">Cancel</button>
+            <button onClick={handleSave} className="btn-primary" data-testid="save-annotation-btn">
+              <Icons.Check /> Save Annotation
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Undo Icon
+Icons.Undo = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>;
+
 // Photo Upload Component with Compression
 function PhotoUpload({ photos, setPhotos, maxPhotos = 10 }) {
   const fileInputRef = useRef(null);
