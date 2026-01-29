@@ -462,21 +462,42 @@ export default function CreateSnagScreen() {
               )}
             </TouchableOpacity>
           </View>
+          
+          {photos.length > 0 && (
+            <Text style={styles.annotateHint}>Tap a photo to annotate with circles</Text>
+          )}
 
           <View style={styles.photosGrid}>
             {photos.map((photo, index) => (
-              <View key={index} style={styles.photoContainer}>
+              <TouchableOpacity 
+                key={index} 
+                style={styles.photoContainer}
+                onPress={() => setAnnotatingPhotoIndex(index)}
+              >
                 <Image source={{ uri: photo }} style={styles.photo} />
+                <View style={styles.annotateOverlay}>
+                  <Ionicons name="create" size={16} color="#fff" />
+                </View>
                 <TouchableOpacity
                   style={styles.removePhotoButton}
                   onPress={() => removePhoto(index)}
                 >
                   <Ionicons name="close-circle" size={24} color="#e74c3c" />
                 </TouchableOpacity>
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
         </View>
+
+        {/* Photo Annotation Modal */}
+        {annotatingPhotoIndex !== null && photos[annotatingPhotoIndex] && (
+          <PhotoAnnotation
+            photo={photos[annotatingPhotoIndex]}
+            visible={true}
+            onSave={handleAnnotationSave}
+            onClose={() => setAnnotatingPhotoIndex(null)}
+          />
+        )}
 
         <TouchableOpacity
           style={[styles.submitButton, isLoading && styles.submitButtonDisabled]}
