@@ -395,6 +395,8 @@ def main():
         ("Get Projects", tester.test_get_projects),
         ("Get Contractors", tester.test_get_contractors),
         ("Get Authorities", tester.test_get_authorities),
+        ("Create Authority Users", tester.test_create_authority_users),
+        ("Get Authorities After Creation", tester.test_get_authorities),
         ("Notifications", tester.test_notifications),
         ("Create Snag", lambda: tester.test_create_snag() is not None),
         ("Create Snag with Due Date", lambda: tester.test_create_snag_with_due_date() is not None),
