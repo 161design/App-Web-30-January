@@ -1241,8 +1241,8 @@ function DashboardPage() {
             <h3 className="font-heading text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
               <Icons.List /> Status Distribution
             </h3>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="h-64" style={{ minWidth: '200px', minHeight: '200px' }}>
+              <ResponsiveContainer width="100%" height="100%" minWidth={200} minHeight={200}>
                 <PieChart>
                   <Pie
                     data={statusChartData}
@@ -1278,8 +1278,8 @@ function DashboardPage() {
               <h3 className="font-heading text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                 <Icons.Building /> Snags by Building
               </h3>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
+              <div className="h-64" style={{ minWidth: '200px', minHeight: '200px' }}>
+                <ResponsiveContainer width="100%" height="100%" minWidth={200} minHeight={200}>
                   <BarChart data={projectStats} layout="vertical" margin={{ left: 20, right: 20 }}>
                     <XAxis type="number" />
                     <YAxis 
