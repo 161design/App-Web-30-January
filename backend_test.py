@@ -318,6 +318,9 @@ def main():
         ("Get Contractors", tester.test_get_contractors),
         ("Notifications", tester.test_notifications),
         ("Create Snag", lambda: tester.test_create_snag() is not None),
+        ("Create Snag with Due Date", lambda: tester.test_create_snag_with_due_date() is not None),
+        ("Suggested Authorities for Building A", lambda: tester.test_suggested_authorities_for_building("Building A")),
+        ("Previous Authority for Building A", lambda: tester.test_previous_authority_for_building("Building A")),
         ("Export Functions", tester.test_export_endpoints),
     ]
     
