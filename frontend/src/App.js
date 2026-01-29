@@ -2298,12 +2298,12 @@ function SnagDetailModal({ snag, onClose, onUpdated }) {
                   />
                 </div>
                 <div>
-                  <label className="label">Due Date</label>
-                  <input
-                    type="date"
+                  <label className="label flex items-center gap-2">
+                    <Icons.Calendar /> Due Date
+                  </label>
+                  <DatePickerCalendar
                     value={formData.due_date}
-                    onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                    className="input-field w-full"
+                    onChange={(val) => setFormData({ ...formData, due_date: val })}
                   />
                 </div>
               </div>
