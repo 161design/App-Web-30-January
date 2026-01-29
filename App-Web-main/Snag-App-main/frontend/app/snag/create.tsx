@@ -901,4 +901,77 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
   },
+  authorityHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  autoAssignButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(54, 96, 146, 0.1)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    gap: 4,
+  },
+  autoAssignText: {
+    fontSize: 12,
+    color: '#366092',
+    fontWeight: '500',
+  },
+  loadingSuggestions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  loadingSuggestionsText: {
+    fontSize: 12,
+    color: '#999',
+  },
+  suggestedContainer: {
+    backgroundColor: 'rgba(54, 96, 146, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(54, 96, 146, 0.2)',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+  },
+  suggestedHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 8,
+  },
+  suggestedHeaderText: {
+    fontSize: 12,
+    color: '#366092',
+    fontWeight: '500',
+  },
+  suggestedList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  suggestedItem: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  suggestedItemSelected: {
+    backgroundColor: '#366092',
+    borderColor: '#366092',
+  },
+  suggestedItemText: {
+    fontSize: 12,
+    color: '#333',
+  },
+  suggestedItemTextSelected: {
+    color: '#fff',
+  },
 });
