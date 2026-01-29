@@ -663,10 +663,24 @@ async def get_snags(
             contractor = await db.users.find_one({"_id": ObjectId(snag["assigned_contractor_id"])})
             contractor_name = contractor["name"] if contractor else None
         
-        authority_name = None
-        if snag.get("assigned_authority_id"):
-            authority = await db.users.find_one({"_id": ObjectId(snag["assigned_authority_id"])})
-            authority_name = authority["name"] if authority else None
+        # Get multiple authority names
+        assigned_authority_ids = snag.get("assigned_authority_ids", [])
+        # Backward compatibility: if old field exists and not in new array
+        if snag.get("assigned_authority_id") and snag["assigned_authority_id"] not in assigned_authority_ids:
+            assigned_authority_ids = [snag["assigned_authority_id"]] + assigned_authority_ids
+        
+        authority_names = []
+        for auth_id in assigned_authority_ids:
+            try:
+                authority = await db.users.find_one({"_id": ObjectId(auth_id)})
+                if authority:
+                    authority_names.append(authority["name"])
+            except:
+                pass
+        
+        # Backward compatibility
+        authority_name = authority_names[0] if authority_names else None
+        assigned_authority_id = assigned_authority_ids[0] if assigned_authority_ids else snag.get("assigned_authority_id")
         
         result.append(SnagResponse(
             id=str(snag["_id"]),
@@ -682,8 +696,10 @@ async def get_snags(
             cost_estimate=snag.get("cost_estimate"),
             assigned_contractor_id=snag.get("assigned_contractor_id"),
             assigned_contractor_name=contractor_name,
-            assigned_authority_id=snag.get("assigned_authority_id"),
+            assigned_authority_id=assigned_authority_id,
             assigned_authority_name=authority_name,
+            assigned_authority_ids=assigned_authority_ids,
+            assigned_authority_names=authority_names,
             due_date=snag.get("due_date"),
             authority_feedback=snag.get("authority_feedback"),
             authority_comment=snag.get("authority_comment"),
