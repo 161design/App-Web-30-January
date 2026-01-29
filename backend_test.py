@@ -210,6 +210,93 @@ class PMCSnagListAPITester:
                     return False
         return success
 
+    def test_suggested_authorities_for_building(self, building_name="Building A"):
+        """Test getting suggested authorities for a building based on historical data"""
+        success, response = self.run_test(
+            f"Get Suggested Authorities for {building_name}",
+            "GET",
+            f"/api/buildings/{building_name}/suggested-authorities",
+            200
+        )
+        if success:
+            if 'suggested_authorities' not in response:
+                print(f"❌ Missing 'suggested_authorities' field in response")
+                return False
+            
+            authorities = response['suggested_authorities']
+            print(f"   Found {len(authorities)} suggested authorities")
+            
+            # Check structure of each authority
+            for auth in authorities:
+                required_fields = ['id', 'name', 'snag_count']
+                for field in required_fields:
+                    if field not in auth:
+                        print(f"❌ Missing field '{field}' in authority data")
+                        return False
+                print(f"   - {auth['name']} ({auth['snag_count']} snags)")
+        return success
+
+    def test_previous_authority_for_building(self, building_name="Building A"):
+        """Test getting previous authority for a building"""
+        success, response = self.run_test(
+            f"Get Previous Authority for {building_name}",
+            "GET",
+            f"/api/buildings/{building_name}/previous-authority",
+            200
+        )
+        if success:
+            required_fields = ['authority_id', 'authority_name']
+            for field in required_fields:
+                if field not in response:
+                    print(f"❌ Missing field '{field}' in response")
+                    return False
+            
+            if response['authority_id']:
+                print(f"   Previous authority: {response['authority_name']} (ID: {response['authority_id']})")
+            else:
+                print(f"   No previous authority found for {building_name}")
+        return success
+
+    def test_create_snag_with_due_date(self):
+        """Test creating a snag with due date to test calendar functionality"""
+        from datetime import datetime, timedelta
+        
+        # Create a due date 7 days from now
+        due_date = (datetime.now() + timedelta(days=7)).isoformat()
+        
+        snag_data = {
+            "description": "Test snag with due date for calendar testing",
+            "location": "Test Floor 2, Room 201",
+            "project_name": "Building A",
+            "possible_solution": "Test calendar solution",
+            "priority": "high",
+            "cost_estimate": 200.00,
+            "due_date": due_date,
+            "photos": []
+        }
+        
+        success, response = self.run_test(
+            "Create Snag with Due Date",
+            "POST",
+            "/api/snags",
+            200,
+            data=snag_data
+        )
+        
+        if success:
+            snag_id = response.get('id')
+            returned_due_date = response.get('due_date')
+            print(f"   Created snag with ID: {snag_id}, Due Date: {returned_due_date}")
+            
+            # Verify due date was saved correctly
+            if returned_due_date:
+                print(f"   ✅ Due date saved successfully")
+                return snag_id
+            else:
+                print(f"   ❌ Due date not saved properly")
+                return None
+        return None
+
 def main():
     print("🚀 Starting PMC Snag List API Testing...")
     print("=" * 60)
