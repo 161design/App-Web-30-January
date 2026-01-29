@@ -901,6 +901,118 @@ function DashboardPage() {
   );
 }
 
+// Pagination Component
+function Pagination({ currentPage, totalPages, totalItems, itemsPerPage, onPageChange, onItemsPerPageChange }) {
+  const pageNumbers = [];
+  const maxVisiblePages = 5;
+  
+  let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+  let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+  
+  if (endPage - startPage + 1 < maxVisiblePages) {
+    startPage = Math.max(1, endPage - maxVisiblePages + 1);
+  }
+  
+  for (let i = startPage; i <= endPage; i++) {
+    pageNumbers.push(i);
+  }
+
+  const startItem = (currentPage - 1) * itemsPerPage + 1;
+  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+
+  return (
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t border-border">
+      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+        <span>
+          Showing <span className="font-medium text-foreground">{startItem}</span> to{' '}
+          <span className="font-medium text-foreground">{endItem}</span> of{' '}
+          <span className="font-medium text-foreground">{totalItems}</span> results
+        </span>
+        <select
+          value={itemsPerPage}
+          onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
+          className="input-field py-1 px-2 text-sm"
+          data-testid="items-per-page"
+        >
+          <option value={10}>10 per page</option>
+          <option value={25}>25 per page</option>
+          <option value={50}>50 per page</option>
+          <option value={100}>100 per page</option>
+        </select>
+      </div>
+      
+      <div className="flex items-center gap-1">
+        <button
+          onClick={() => onPageChange(1)}
+          disabled={currentPage === 1}
+          className="pagination-btn"
+          data-testid="pagination-first"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+          </svg>
+        </button>
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="pagination-btn"
+          data-testid="pagination-prev"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        
+        {startPage > 1 && (
+          <>
+            <button onClick={() => onPageChange(1)} className="pagination-btn">1</button>
+            {startPage > 2 && <span className="px-2 text-muted-foreground">...</span>}
+          </>
+        )}
+        
+        {pageNumbers.map((number) => (
+          <button
+            key={number}
+            onClick={() => onPageChange(number)}
+            className={`pagination-btn ${currentPage === number ? 'pagination-btn-active' : ''}`}
+            data-testid={`pagination-page-${number}`}
+          >
+            {number}
+          </button>
+        ))}
+        
+        {endPage < totalPages && (
+          <>
+            {endPage < totalPages - 1 && <span className="px-2 text-muted-foreground">...</span>}
+            <button onClick={() => onPageChange(totalPages)} className="pagination-btn">{totalPages}</button>
+          </>
+        )}
+        
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="pagination-btn"
+          data-testid="pagination-next"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+        <button
+          onClick={() => onPageChange(totalPages)}
+          disabled={currentPage === totalPages}
+          className="pagination-btn"
+          data-testid="pagination-last"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // Snags Page
 function SnagsPage() {
   const { user } = useAuth();
@@ -911,12 +1023,19 @@ function SnagsPage() {
   const [filters, setFilters] = useState({ status: '', priority: '', project: '', search: '' });
   const [projects, setProjects] = useState([]);
   const [realtimeUpdate, setRealtimeUpdate] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const ws = useWebSocket();
 
   useEffect(() => {
     loadSnags();
     loadProjects();
   }, [filters.status, filters.priority, filters.project]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters.status, filters.priority, filters.project, filters.search]);
 
   // Subscribe to real-time updates
   useEffect(() => {
@@ -991,16 +1110,37 @@ function SnagsPage() {
     }
   };
 
-  const filteredSnags = snags.filter(snag => {
-    if (!filters.search) return true;
-    const search = filters.search.toLowerCase();
-    return (
-      snag.description?.toLowerCase().includes(search) ||
-      snag.location?.toLowerCase().includes(search) ||
-      snag.project_name?.toLowerCase().includes(search) ||
-      String(snag.query_no).includes(search)
-    );
-  });
+  // Filter snags by search
+  const filteredSnags = useMemo(() => {
+    return snags.filter(snag => {
+      if (!filters.search) return true;
+      const search = filters.search.toLowerCase();
+      return (
+        snag.description?.toLowerCase().includes(search) ||
+        snag.location?.toLowerCase().includes(search) ||
+        snag.project_name?.toLowerCase().includes(search) ||
+        String(snag.query_no).includes(search)
+      );
+    });
+  }, [snags, filters.search]);
+
+  // Paginate filtered snags
+  const totalPages = Math.ceil(filteredSnags.length / itemsPerPage);
+  const paginatedSnags = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredSnags.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredSnags, currentPage, itemsPerPage]);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    // Scroll to top of table
+    document.querySelector('[data-testid="snags-page"]')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1); // Reset to first page
+  };
 
   const canCreate = ['manager', 'inspector'].includes(user?.role);
   const canExport = ['manager', 'authority'].includes(user?.role);
@@ -1104,50 +1244,64 @@ function SnagsPage() {
               No snags found. {canCreate && 'Create your first snag!'}
             </div>
           ) : (
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Project</th>
-                  <th>Location</th>
-                  <th>Description</th>
-                  <th>Status</th>
-                  <th>Priority</th>
-                  <th>Contractor</th>
-                  <th>Photos</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredSnags.map((snag) => (
-                  <tr key={snag.id} data-testid={`snag-row-${snag.id}`}>
-                    <td className="font-mono text-xs font-semibold text-primary">#{snag.query_no}</td>
-                    <td className="font-medium">{snag.project_name}</td>
-                    <td>{snag.location}</td>
-                    <td className="max-w-xs truncate">{snag.description}</td>
-                    <td><StatusBadge status={snag.status} /></td>
-                    <td><PriorityBadge priority={snag.priority} /></td>
-                    <td>{snag.assigned_contractor_name || '-'}</td>
-                    <td>
-                      {snag.photos?.length > 0 ? (
-                        <span className="text-muted-foreground flex items-center gap-1">
-                          <Icons.Image /> {snag.photos.length}
-                        </span>
-                      ) : '-'}
-                    </td>
-                    <td>
-                      <button 
-                        onClick={() => setSelectedSnag(snag)}
-                        className="p-2 hover:bg-muted rounded-sm text-muted-foreground hover:text-foreground"
-                        data-testid={`view-snag-${snag.id}`}
-                      >
-                        <Icons.Eye />
-                      </button>
-                    </td>
+            <>
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Project</th>
+                    <th>Location</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Contractor</th>
+                    <th>Photos</th>
+                    <th>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {paginatedSnags.map((snag) => (
+                    <tr key={snag.id} data-testid={`snag-row-${snag.id}`}>
+                      <td className="font-mono text-xs font-semibold text-primary">#{snag.query_no}</td>
+                      <td className="font-medium">{snag.project_name}</td>
+                      <td>{snag.location}</td>
+                      <td className="max-w-xs truncate">{snag.description}</td>
+                      <td><StatusBadge status={snag.status} /></td>
+                      <td><PriorityBadge priority={snag.priority} /></td>
+                      <td>{snag.assigned_contractor_name || '-'}</td>
+                      <td>
+                        {snag.photos?.length > 0 ? (
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            <Icons.Image /> {snag.photos.length}
+                          </span>
+                        ) : '-'}
+                      </td>
+                      <td>
+                        <button 
+                          onClick={() => setSelectedSnag(snag)}
+                          className="p-2 hover:bg-muted rounded-sm text-muted-foreground hover:text-foreground"
+                          data-testid={`view-snag-${snag.id}`}
+                        >
+                          <Icons.Eye />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              
+              {/* Pagination */}
+              {filteredSnags.length > 10 && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  totalItems={filteredSnags.length}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={handlePageChange}
+                  onItemsPerPageChange={handleItemsPerPageChange}
+                />
+              )}
+            </>
           )}
         </div>
       </div>
