@@ -22,6 +22,7 @@ import { getCurrentUTMLocation } from '../../utils/gpsToUTM';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { formatDate } from '../../utils/dateFormat';
 import { BACKEND_URL } from '../../config/api';
+import PhotoAnnotation from '../components/PhotoAnnotation';
 
 interface Contractor {
   id: string;
