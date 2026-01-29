@@ -81,8 +81,11 @@ export default function SnagDetailScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [editedSnag, setEditedSnag] = useState<Partial<Snag>>({});
   const [contractors, setContractors] = useState<Contractor[]>([]);
+  const [authorities, setAuthorities] = useState<Authority[]>([]);
+  const [selectedAuthorityIds, setSelectedAuthorityIds] = useState<string[]>([]);
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [showContractorModal, setShowContractorModal] = useState(false);
+  const [showAuthorityModal, setShowAuthorityModal] = useState(false);
   const [showCompletionDatePicker, setShowCompletionDatePicker] = useState(false);
   const [contractorCompletionDate, setContractorCompletionDate] = useState<Date | null>(null);
 
