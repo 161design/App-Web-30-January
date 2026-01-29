@@ -50,6 +50,7 @@ export default function CreateSnagScreen() {
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [annotatingPhotoIndex, setAnnotatingPhotoIndex] = useState<number | null>(null);
 
   useEffect(() => {
     fetchContractors();
