@@ -228,7 +228,7 @@ def main():
         ("Current User", tester.test_auth_me),
         ("Get Snags", tester.test_get_snags),
         ("Get Projects", tester.test_get_projects),
-        ("Get Contractors", tester.test_contractors),
+        ("Get Contractors", tester.test_get_contractors),
         ("Notifications", tester.test_notifications),
         ("Create Snag", lambda: tester.test_create_snag() is not None),
         ("Export Functions", tester.test_export_endpoints),
