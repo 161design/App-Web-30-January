@@ -1,0 +1,79 @@
+{
+  "expo": {
+    "name": "PMC Snag List",
+    "slug": "pmc-snag-list",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "pmcsnaglist",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#366092"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.pmcsnaglist.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Capture snag photos for documentation",
+        "NSPhotoLibraryUsageDescription": "Select existing photos for snag reports",
+        "NSPhotoLibraryAddUsageDescription": "Save snag photos to your gallery",
+        "NSLocationWhenInUseUsageDescription": "Auto-capture GPS location for snags"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#366092"
+      },
+      "package": "com.pmcsnaglist.app",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Capture snag photos for documentation"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Select existing photos for snag reports"
+        }
+      ],
+      "@react-native-community/datetimepicker",
+      "expo-font",
+      "expo-web-browser"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "ffe1151d-2722-4c44-8cea-b6b024d7065f"
+      },
+      "backendUrl": "https://buildtrack-app-3.preview.emergentagent.com"
+    },
+    "owner": "1.61design"
+  }
+}

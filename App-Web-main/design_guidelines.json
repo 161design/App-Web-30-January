@@ -1,0 +1,142 @@
+{
+  "identity": {
+    "name": "E1",
+    "role": "Creative Designer",
+    "principles": [
+      "Fusion over Imitation",
+      "Emotion First",
+      "Content is King",
+      "Zoom In",
+      "Negative Space",
+      "Contrast"
+    ],
+    "archetype": "The Performance Pro (Tactical Construction)",
+    "vibe": "Precision, Authority, Reliability, Industrial"
+  },
+  "typography": {
+    "fonts": {
+      "primary": "Inter, sans-serif",
+      "headings": "Manrope, sans-serif",
+      "mono": "JetBrains Mono, monospace"
+    },
+    "usage": {
+      "h1": "font-heading text-4xl font-bold tracking-tight text-foreground",
+      "h2": "font-heading text-3xl font-semibold tracking-tight text-foreground",
+      "h3": "font-heading text-2xl font-semibold tracking-tight text-foreground",
+      "body": "font-sans text-base leading-relaxed text-muted-foreground",
+      "caption": "font-sans text-sm text-muted-foreground",
+      "code": "font-mono text-xs bg-muted px-1 py-0.5 rounded text-foreground"
+    },
+    "instructions": "Use Manrope for all headings to give a technical, industrial feel. Use Inter for body text for maximum legibility in dense data tables. Use JetBrains Mono for Snag IDs, Reference Codes, and timestamps."
+  },
+  "colors": {
+    "palette": {
+      "background": "#09090b",
+      "foreground": "#fafafa",
+      "card": "#18181b",
+      "card_foreground": "#fafafa",
+      "popover": "#18181b",
+      "popover_foreground": "#fafafa",
+      "primary": "#f97316",
+      "primary_foreground": "#fafafa",
+      "secondary": "#27272a",
+      "secondary_foreground": "#fafafa",
+      "muted": "#27272a",
+      "muted_foreground": "#a1a1aa",
+      "accent": "#27272a",
+      "accent_foreground": "#fafafa",
+      "destructive": "#ef4444",
+      "destructive_foreground": "#fafafa",
+      "border": "#27272a",
+      "input": "#27272a",
+      "ring": "#f97316"
+    },
+    "semantic": {
+      "snag_open": "#ef4444",
+      "snag_in_progress": "#f97316",
+      "snag_resolved": "#22c55e",
+      "priority_high": "#ef4444",
+      "priority_medium": "#f97316",
+      "priority_low": "#3b82f6"
+    },
+    "theme": "dark",
+    "instructions": "Strict Dark Mode. Use Zinc (Slate-like) grays for the UI shell. The Primary color is 'Safety Orange' (#f97316) to align with construction safety gear. Use this sparingly for CTAs and active states. Avoid gradients; prefer flat, solid colors with 1px borders."
+  },
+  "layout": {
+    "grid_system": "Bento Grid Mode B (High Density)",
+    "spacing": {
+      "container_padding": "p-6 md:p-8 lg:p-10",
+      "element_gap": "gap-4 md:gap-6",
+      "section_gap": "gap-8 md:gap-12"
+    },
+    "structure": {
+      "sidebar": "Fixed width (250px), collapsible on mobile. Darker background (#09090b).",
+      "header": "Sticky top, glassmorphism (backdrop-blur-md), border-b border-border.",
+      "main": "Scrollable area, max-width-7xl mx-auto."
+    },
+    "radius": "rounded-sm"
+  },
+  "components": {
+    "buttons": {
+      "style": "Sharp or slightly rounded (rounded-sm). High contrast.",
+      "variants": {
+        "default": "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm",
+        "outline": "border-input bg-background hover:bg-accent hover:text-accent-foreground",
+        "ghost": "hover:bg-accent hover:text-accent-foreground"
+      }
+    },
+    "cards": {
+      "style": "Flat background (bg-card), 1px border (border-border), no shadow or very subtle shadow-sm.",
+      "header": "p-6 pb-2",
+      "content": "p-6 pt-0"
+    },
+    "tables": {
+      "style": "Dense, bordered. Header background bg-muted/50. Row hover bg-muted/50.",
+      "cell": "py-3 px-4 text-sm"
+    },
+    "badges": {
+      "style": "rounded-sm font-medium text-xs px-2 py-0.5",
+      "variants": {
+        "outline": "border-border text-foreground",
+        "status": "Use semantic colors (red/orange/green) with 15% opacity background and 100% opacity text."
+      }
+    },
+    "inputs": {
+      "style": "h-10 rounded-sm border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+    }
+  },
+  "assets": {
+    "images": {
+      "avatars": [
+        "https://images.unsplash.com/photo-1603516270950-26e4f5004ffd?auto=format&fit=crop&w=200&q=80",
+        "https://images.unsplash.com/photo-1655917303304-8ad60e036cba?auto=format&fit=crop&w=200&q=80",
+        "https://images.pexels.com/photos/6196233/pexels-photo-6196233.jpeg?auto=compress&cs=tinysrgb&w=200"
+      ],
+      "snags": [
+        "https://images.unsplash.com/photo-1632143696848-ed6f1d57d66e?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1651573653282-cbaf27bcfe74?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1718910800129-cc79fc64a580?auto=format&fit=crop&w=800&q=80"
+      ]
+    },
+    "icons": "Lucide React (default). Use consistent stroke width (1.5px or 2px)."
+  },
+  "visual_enhancers": {
+    "glassmorphism": "Use sparingly on sticky headers: bg-background/80 backdrop-blur-md border-b border-border.",
+    "borders": "Use 'Tracing Beam' effect for active cards or high-priority alerts.",
+    "textures": "Avoid heavy noise. Keep it clean and vector-sharp for data readability."
+  },
+  "accessibility": {
+    "contrast": "Ensure 4.5:1 contrast ratio for text. Use APCA standards.",
+    "focus": "Visible focus rings (ring-2 ring-primary) are mandatory.",
+    "motion": "Respect prefers-reduced-motion."
+  },
+  "universal_guidelines": [
+    "Do not use gradients for backgrounds.",
+    "Do not center-align main content; use left alignment for readability.",
+    "Use 2-3x more spacing than typical designs.",
+    "All interactive elements must have data-testid attributes.",
+    "Use Sonner for toasts.",
+    "Use Shadcn components for all interactive elements.",
+    "Dark mode is the default and preferred theme."
+  ]
+}

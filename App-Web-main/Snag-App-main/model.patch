@@ -1,0 +1,170 @@
+diff --git a/backend/server.py b/backend/server.py
+index aab981e..5c45e15 100644
+--- a/backend/server.py
++++ b/backend/server.py
+@@ -505,26 +505,59 @@ async def update_snag(
+     if not snag:
+         raise HTTPException(status_code=404, detail="Snag not found")
+     
+-    # Role-based permissions
++    # Build update dict
++    update_data = {k: v for k, v in snag_update.dict(exclude_unset=True).items() if v is not None}
++    update_data["updated_at"] = datetime.utcnow()
++    
++    # Role-based permissions and workflow logic
+     if current_user["role"] == UserRole.CONTRACTOR:
+         if snag.get("assigned_contractor_id") != str(current_user["_id"]):
+-            raise HTTPException(status_code=404, detail="Not assigned to this snag")
+-        # Contractors can only update status and work dates
+-        allowed_updates = {"status", "work_started_date", "work_completed_date"}
++            raise HTTPException(status_code=403, detail="Not assigned to this snag")
++        
++        # Contractors can mark work as completed
++        allowed_updates = {"contractor_completed", "work_started_date", "work_completed_date"}
+         provided_updates = {k for k, v in snag_update.dict(exclude_unset=True).items() if v is not None}
+         if not provided_updates.issubset(allowed_updates):
+-            raise HTTPException(status_code=403, detail="Contractors can only update status and work dates")
++            raise HTTPException(status_code=403, detail="Contractors can only mark completion and update work dates")
++        
++        # When contractor marks as completed, set flag and change status to in_progress if not already
++        if update_data.get("contractor_completed"):
++            update_data["contractor_completed"] = True
++            update_data["work_completed_date"] = datetime.utcnow()
++            if snag["status"] == SnagStatus.OPEN:
++                update_data["status"] = SnagStatus.IN_PROGRESS
++            
++            # Check if authority already approved, if yes then mark as resolved
++            if snag.get("authority_approved"):
++                update_data["status"] = SnagStatus.RESOLVED
+     
+-    if current_user["role"] == UserRole.AUTHORITY:
+-        # Authority can only update status and feedback
+-        allowed_updates = {"status", "authority_feedback"}
++    elif current_user["role"] == UserRole.AUTHORITY:
++        # Authority can approve snag and provide feedback
++        allowed_updates = {"authority_approved", "authority_feedback"}
+         provided_updates = {k for k, v in snag_update.dict(exclude_unset=True).items() if v is not None}
+         if not provided_updates.issubset(allowed_updates):
+-            raise HTTPException(status_code=403, detail="Authority can only update status and feedback")
++            raise HTTPException(status_code=403, detail="Authority can only approve and provide feedback")
++        
++        # When authority approves, set flag
++        if update_data.get("authority_approved"):
++            update_data["authority_approved"] = True
++            
++            # Check if contractor already completed, if yes then mark as resolved
++            if snag.get("contractor_completed"):
++                update_data["status"] = SnagStatus.RESOLVED
++            else:
++                # Authority approved but contractor not completed yet, keep in progress
++                if snag["status"] == SnagStatus.OPEN:
++                    update_data["status"] = SnagStatus.IN_PROGRESS
+     
+-    # Build update dict
+-    update_data = {k: v for k, v in snag_update.dict(exclude_unset=True).items() if v is not None}
+-    update_data["updated_at"] = datetime.utcnow()
++    elif current_user["role"] == UserRole.MANAGER:
++        # Manager can approve like authority or update anything
++        if update_data.get("authority_approved"):
++            update_data["authority_approved"] = True
++            
++            # Check if contractor already completed
++            if snag.get("contractor_completed"):
++                update_data["status"] = SnagStatus.RESOLVED
+     
+     old_status = snag["status"]
+     new_status = update_data.get("status", old_status)
+@@ -534,32 +567,51 @@ async def update_snag(
+         {"$set": update_data}
+     )
+     
+-    # Send notifications on status change
+-    if old_status != new_status:
+-        # Notify creator
++    # Send notifications
++    notifications_sent = []
++    
++    # Notify on contractor completion
++    if update_data.get("contractor_completed") and not snag.get("contractor_completed"):
++        # Notify authority and manager
++        authorities = await db.users.find({"role": {"$in": [UserRole.AUTHORITY, UserRole.MANAGER]}}).to_list(100)
++        for auth in authorities:
++            await send_notification(
++                str(auth["_id"]),
++                snag_id,
++                f"Snag #{snag['query_no']} completed by contractor - pending your approval"
++            )
++        notifications_sent.append("authority")
++    
++    # Notify on authority approval
++    if update_data.get("authority_approved") and not snag.get("authority_approved"):
++        # Notify contractor and creator
++        if snag.get("assigned_contractor_id"):
++            await send_notification(
++                snag["assigned_contractor_id"],
++                snag_id,
++                f"Snag #{snag['query_no']} approved by authority"
++            )
+         await send_notification(
+             snag["created_by_id"],
+             snag_id,
+-            f"Snag #{snag['query_no']} status changed from {old_status} to {new_status}"
++            f"Snag #{snag['query_no']} approved by authority"
+         )
+-        
+-        # Notify contractor if assigned
+-        if snag.get("assigned_contractor_id"):
++        notifications_sent.append("contractor")
++    
++    # Notify on status change to resolved
++    if old_status != new_status and new_status == SnagStatus.RESOLVED:
++        if "authority" not in notifications_sent:
++            await send_notification(
++                snag["created_by_id"],
++                snag_id,
++                f"Snag #{snag['query_no']} marked as RESOLVED (Contractor completed & Authority approved)"
++            )
++        if snag.get("assigned_contractor_id") and "contractor" not in notifications_sent:
+             await send_notification(
+                 snag["assigned_contractor_id"],
+                 snag_id,
+-                f"Snag #{snag['query_no']} status changed to {new_status}"
++                f"Snag #{snag['query_no']} marked as RESOLVED"
+             )
+-        
+-        # If status is resolved, notify authority
+-        if new_status == SnagStatus.RESOLVED:
+-            authorities = await db.users.find({"role": UserRole.AUTHORITY}).to_list(100)
+-            for authority in authorities:
+-                await send_notification(
+-                    str(authority["_id"]),
+-                    snag_id,
+-                    f"Snag #{snag['query_no']} marked as resolved - needs verification"
+-                )
+     
+     # Get updated snag
+     updated_snag = await db.snags.find_one({"_id": ObjectId(snag_id)})
+diff --git a/model.patch b/model.patch
+index 91e9250..8a83be2 100644
+--- a/model.patch
++++ b/model.patch
+@@ -1,19 +0,0 @@
+-diff --git a/backend/server.py b/backend/server.py
+-index 9e4122f..50ec63b 100644
+---- a/backend/server.py
+-+++ b/backend/server.py
+-@@ -500,11 +500,11 @@ async def update_snag(
+-     if current_user["role"] == UserRole.CONTRACTOR:
+-         if snag.get("assigned_contractor_id") != str(current_user["_id"]):
+-             raise HTTPException(status_code=404, detail="Not assigned to this snag")
+--        # Contractors can only update status, work dates and possible_solution
+--        allowed_updates = {"status", "work_started_date", "work_completed_date", "possible_solution"}
+-+        # Contractors can only update status and work dates
+-+        allowed_updates = {"status", "work_started_date", "work_completed_date"}
+-         provided_updates = {k for k, v in snag_update.dict(exclude_unset=True).items() if v is not None}
+-         if not provided_updates.issubset(allowed_updates):
+--            raise HTTPException(status_code=403, detail="Contractors can only update status, work dates, and possible solution")
+-+            raise HTTPException(status_code=403, detail="Contractors can only update status and work dates")
+-     
+-     if current_user["role"] == UserRole.AUTHORITY:
+-         # Authority can only update status and feedback

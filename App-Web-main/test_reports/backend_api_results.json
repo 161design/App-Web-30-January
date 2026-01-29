@@ -1,0 +1,132 @@
+{
+  "summary": {
+    "total_tests": 16,
+    "passed_tests": 15,
+    "success_rate": 93.75,
+    "timestamp": "2026-01-28T07:06:47.419402"
+  },
+  "detailed_results": [
+    {
+      "test_name": "Manager Login",
+      "success": true,
+      "details": "Token received, user: Default Manager",
+      "response_data": null,
+      "timestamp": "2026-01-28T07:06:36.553394"
+    },
+    {
+      "test_name": "Get Current User",
+      "success": true,
+      "details": "User: Default Manager (manager)",
+      "response_data": null,
+      "timestamp": "2026-01-28T07:06:36.590268"
+    },
+    {
+      "test_name": "Register User",
+      "success": true,
+      "details": "Created user: Test Contractor (ID: 6979b57c57ea66e3621d599b)",
+      "response_data": null,
+      "timestamp": "2026-01-28T07:06:36.857699"
+    },
+    {
+      "test_name": "Get All Users",
+      "success": true,
+      "details": "Retrieved 7 users",
+      "response_data": null,
+      "timestamp": "2026-01-28T07:06:36.892896"
+    },
+    {
+      "test_name": "Get Contractors",
+      "success": true,
+      "details": "Retrieved 6 contractors",
+      "response_data": null,
+      "timestamp": "2026-01-28T07:06:36.930547"
+    },
+    {
+      "test_name": "Create Snag",
+      "success": true,
+      "details": "Created snag #6 (ID: 6979b57c57ea66e3621d599c)",
+      "response_data": null,
+      "timestamp": "2026-01-28T07:06:36.970669"
+    },
+    {
+      "test_name": "Get All Snags",
+      "success": true,
+      "details": "Retrieved 10 snags",
+      "response_data": null,
+      "timestamp": "2026-01-28T07:06:37.014816"
+    },
+    {
+      "test_name": "Get Snag by ID",
+      "success": true,
+      "details": "Retrieved snag #6",
+      "response_data": null,
+      "timestamp": "2026-01-28T07:06:37.053589"
+    },
+    {
+      "test_name": "Update Snag",
+      "success": true,
+      "details": "Updated snag status to: in_progress",
+      "response_data": null,
+      "timestamp": "2026-01-28T07:06:37.091591"
+    },
+    {
+      "test_name": "Dashboard Stats",
+      "success": true,
+      "details": "Total: 10, Open: 4, Resolved: 0",
+      "response_data": null,
+      "timestamp": "2026-01-28T07:06:37.129322"
+    },
+    {
+      "test_name": "Get Project Names",
+      "success": true,
+      "details": "Retrieved 5 project names",
+      "response_data": null,
+      "timestamp": "2026-01-28T07:06:37.164890"
+    },
+    {
+      "test_name": "Get Notifications",
+      "success": true,
+      "details": "Retrieved 0 notifications",
+      "response_data": null,
+      "timestamp": "2026-01-28T07:06:37.196916"
+    },
+    {
+      "test_name": "WebSocket Connection & Auth",
+      "success": true,
+      "details": "Connected and authenticated user: 6979a9bdfc357bcb0fa28d94",
+      "response_data": null,
+      "timestamp": "2026-01-28T07:06:37.244618"
+    },
+    {
+      "test_name": "WebSocket Real-time Updates",
+      "success": false,
+      "details": "Timeout waiting for WebSocket message",
+      "response_data": null,
+      "timestamp": "2026-01-28T07:06:47.328900"
+    },
+    {
+      "test_name": "Unauthorized Access Test",
+      "success": true,
+      "details": "Correctly rejected unauthorized request",
+      "response_data": null,
+      "timestamp": "2026-01-28T07:06:47.385122"
+    },
+    {
+      "test_name": "Invalid Snag ID Test",
+      "success": true,
+      "details": "Correctly returned 404 for non-existent snag",
+      "response_data": null,
+      "timestamp": "2026-01-28T07:06:47.419145"
+    }
+  ],
+  "created_resources": {
+    "users": [
+      "6979b57c57ea66e3621d599b"
+    ],
+    "snags": [
+      "6979b57c57ea66e3621d599c",
+      "6979b57d57ea66e3621d599e"
+    ],
+    "notifications": []
+  }
+}
