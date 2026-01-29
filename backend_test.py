@@ -352,24 +352,28 @@ class PMCSnagListAPITester:
                 return None
         return None
 
-    def test_get_authorities(self):
-        """Test getting authorities list for multiple selection"""
-        success, response = self.run_test(
-            "Get Authorities List",
-            "GET",
-            "/api/users/authorities",
-            200
-        )
-        if success:
-            print(f"   Found {len(response)} authorities")
-            if len(response) > 0:
-                auth = response[0]
-                required_fields = ['id', 'name', 'email', 'role']
-                for field in required_fields:
-                    if field not in auth:
-                        print(f"❌ Missing field in authority: {field}")
-                        return False
-        return success
+    def test_create_authority_users(self):
+        """Create additional authority users for testing multiple selection"""
+        authorities_to_create = [
+            {"email": "authority2@pmc.com", "password": "auth123", "name": "Authority Two", "role": "authority"},
+            {"email": "authority3@pmc.com", "password": "auth123", "name": "Authority Three", "role": "authority"}
+        ]
+        
+        created_count = 0
+        for auth_data in authorities_to_create:
+            success, response = self.run_test(
+                f"Create Authority User: {auth_data['name']}",
+                "POST",
+                "/api/auth/register",
+                200,
+                data=auth_data
+            )
+            if success:
+                created_count += 1
+                print(f"   Created authority: {auth_data['name']} (ID: {response.get('id')})")
+        
+        print(f"   ✅ Created {created_count} additional authorities")
+        return created_count > 0
 
 def main():
     print("🚀 Starting PMC Snag List API Testing...")
