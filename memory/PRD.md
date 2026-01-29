@@ -65,3 +65,32 @@ Property Management Construction (PMC) Snag List application for tracking and ma
 ## Default Credentials
 - Email: manager@pmc.com
 - Password: manager123
+
+## Photo Annotation Feature (Jan 29, 2026)
+
+### Web App Implementation
+- **PhotoAnnotationModal component** in App.js
+- HTML5 Canvas-based drawing
+- Features:
+  - Draw ellipses/circles by click and drag
+  - Color picker: Red (default), Yellow, Green, Blue, White, Black
+  - Undo last annotation
+  - Clear all annotations
+  - Save annotated image (replaces original)
+  - Auto-opens after photo capture/selection
+  - Click existing photos to re-annotate
+
+### Mobile App Implementation (Expo/React Native)
+- **PhotoAnnotation component** at `/app/components/PhotoAnnotation.tsx`
+- Uses `react-native-svg` for drawing ellipses
+- Uses `react-native-view-shot` for capturing annotated image
+- Features:
+  - Same color picker as web (6 colors)
+  - Touch-based drawing (PanResponder)
+  - Undo/Clear functionality
+  - Full-screen modal for annotation
+  - Auto-opens after camera/gallery selection
+
+### Dependencies Added
+- Web: `browser-image-compression`, `recharts`
+- Mobile: `react-native-svg`, `react-native-view-shot`
