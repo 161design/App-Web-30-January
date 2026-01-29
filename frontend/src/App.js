@@ -419,22 +419,62 @@ function ProjectSearchInput({ value, onChange, projects, onSelect }) {
   );
 }
 
-// Photo Upload Component
+// Image Compression Options
+const compressionOptions = {
+  maxSizeMB: 0.5,          // Max file size 500KB
+  maxWidthOrHeight: 1200,  // Max dimension 1200px
+  useWebWorker: true,
+  fileType: 'image/jpeg',
+  initialQuality: 0.7
+};
+
+// Photo Upload Component with Compression
 function PhotoUpload({ photos, setPhotos, maxPhotos = 10 }) {
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
+  const [compressing, setCompressing] = useState(false);
+  const [compressionProgress, setCompressionProgress] = useState({ current: 0, total: 0 });
+
+  const compressAndAddPhoto = async (file) => {
+    try {
+      // Compress the image
+      const compressedFile = await imageCompression(file, compressionOptions);
+      
+      // Convert to base64
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (event) => resolve(event.target.result);
+        reader.readAsDataURL(compressedFile);
+      });
+    } catch (error) {
+      console.error('Compression error:', error);
+      // Fallback to original if compression fails
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (event) => resolve(event.target.result);
+        reader.readAsDataURL(file);
+      });
+    }
+  };
 
   const handleFileSelect = async (e) => {
     const files = Array.from(e.target.files);
-    for (const file of files) {
-      if (photos.length >= maxPhotos) break;
+    if (files.length === 0) return;
+    
+    setCompressing(true);
+    setCompressionProgress({ current: 0, total: files.length });
+    
+    const newPhotos = [];
+    for (let i = 0; i < files.length; i++) {
+      if (photos.length + newPhotos.length >= maxPhotos) break;
       
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setPhotos(prev => [...prev, event.target.result]);
-      };
-      reader.readAsDataURL(file);
+      setCompressionProgress({ current: i + 1, total: files.length });
+      const compressed = await compressAndAddPhoto(files[i]);
+      newPhotos.push(compressed);
     }
+    
+    setPhotos(prev => [...prev, ...newPhotos]);
+    setCompressing(false);
     e.target.value = '';
   };
 
@@ -467,7 +507,7 @@ function PhotoUpload({ photos, setPhotos, maxPhotos = 10 }) {
             type="button"
             onClick={() => cameraInputRef.current?.click()}
             className="btn-outline text-sm"
-            disabled={photos.length >= maxPhotos}
+            disabled={photos.length >= maxPhotos || compressing}
             data-testid="camera-btn"
           >
             <Icons.Camera /> Camera
@@ -476,13 +516,31 @@ function PhotoUpload({ photos, setPhotos, maxPhotos = 10 }) {
             type="button"
             onClick={() => fileInputRef.current?.click()}
             className="btn-outline text-sm"
-            disabled={photos.length >= maxPhotos}
+            disabled={photos.length >= maxPhotos || compressing}
             data-testid="gallery-btn"
           >
             <Icons.Image /> Gallery
           </button>
         </div>
       </div>
+      
+      {/* Compression Progress */}
+      {compressing && (
+        <div className="bg-primary/10 border border-primary/30 rounded-sm p-3">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <span className="text-sm text-primary">
+              Compressing image {compressionProgress.current} of {compressionProgress.total}...
+            </span>
+          </div>
+          <div className="mt-2 h-1 bg-primary/20 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-primary transition-all duration-300"
+              style={{ width: `${(compressionProgress.current / compressionProgress.total) * 100}%` }}
+            />
+          </div>
+        </div>
+      )}
       
       {photos.length > 0 && (
         <div className="grid grid-cols-4 md:grid-cols-5 gap-2">
@@ -505,13 +563,14 @@ function PhotoUpload({ photos, setPhotos, maxPhotos = 10 }) {
         </div>
       )}
       
-      {photos.length === 0 && (
+      {photos.length === 0 && !compressing && (
         <div 
           onClick={() => fileInputRef.current?.click()}
           className="border-2 border-dashed border-border rounded-sm p-8 text-center cursor-pointer hover:border-primary transition-colors"
         >
           <Icons.Image />
           <p className="text-muted-foreground mt-2">Click to upload photos or use camera</p>
+          <p className="text-xs text-muted-foreground mt-1">Images will be auto-compressed for faster uploads</p>
         </div>
       )}
     </div>
