@@ -64,6 +64,7 @@ export default function CreateSnagScreen() {
 
   useEffect(() => {
     fetchContractors();
+    fetchAuthorities();
     fetchProjectNames();
     requestPermissions();
     fetchCurrentLocation();
@@ -76,8 +77,11 @@ export default function CreateSnagScreen() {
         name.toLowerCase().includes(projectName.toLowerCase())
       );
       setFilteredProjects(filtered);
+      // Fetch suggested authorities when project changes
+      fetchSuggestedAuthorities(projectName);
     } else {
       setFilteredProjects(projectNames);
+      setSuggestedAuthorities([]);
     }
   }, [projectName, projectNames]);
 
