@@ -3,6 +3,200 @@ import './App.css';
 import imageCompression from 'browser-image-compression';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
+// Calendar date picker component
+function DatePickerCalendar({ value, onChange, minDate = null }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState(value ? new Date(value) : new Date());
+  const containerRef = useRef(null);
+
+  // Close when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
+  const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
+  
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                      'July', 'August', 'September', 'October', 'November', 'December'];
+  const dayNames = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+
+  const prevMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
+  const nextMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
+
+  const selectDate = (day) => {
+    const selected = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+    const dateStr = selected.toISOString().split('T')[0];
+    onChange(dateStr);
+    setIsOpen(false);
+  };
+
+  const isSelected = (day) => {
+    if (!value) return false;
+    const selected = new Date(value);
+    return selected.getDate() === day && 
+           selected.getMonth() === currentMonth.getMonth() && 
+           selected.getFullYear() === currentMonth.getFullYear();
+  };
+
+  const isDisabled = (day) => {
+    if (!minDate) return false;
+    const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+    return date < new Date(minDate);
+  };
+
+  const isToday = (day) => {
+    const today = new Date();
+    return today.getDate() === day && 
+           today.getMonth() === currentMonth.getMonth() && 
+           today.getFullYear() === currentMonth.getFullYear();
+  };
+
+  const formatDisplayDate = (dateStr) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+
+  const clearDate = (e) => {
+    e.stopPropagation();
+    onChange('');
+  };
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <div className="relative">
+        <input
+          type="text"
+          value={formatDisplayDate(value)}
+          onClick={() => setIsOpen(!isOpen)}
+          readOnly
+          className="input-field w-full cursor-pointer pr-20"
+          placeholder="DD/MM/YYYY"
+          data-testid="date-picker-input"
+        />
+        <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
+          {value && (
+            <button
+              type="button"
+              onClick={clearDate}
+              className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground"
+              title="Clear date"
+            >
+              <Icons.X />
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setIsOpen(!isOpen)}
+            className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-primary"
+            data-testid="calendar-toggle-btn"
+          >
+            <Icons.Calendar />
+          </button>
+        </div>
+      </div>
+      
+      {isOpen && (
+        <div className="absolute z-50 mt-1 bg-card border border-border rounded-sm shadow-lg p-3 w-72" data-testid="calendar-popup">
+          {/* Month Navigation */}
+          <div className="flex items-center justify-between mb-3">
+            <button
+              type="button"
+              onClick={prevMonth}
+              className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <span className="font-semibold text-foreground">
+              {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+            </span>
+            <button
+              type="button"
+              onClick={nextMonth}
+              className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+          
+          {/* Day Names */}
+          <div className="grid grid-cols-7 gap-1 mb-2">
+            {dayNames.map((day) => (
+              <div key={day} className="text-center text-xs font-medium text-muted-foreground py-1">
+                {day}
+              </div>
+            ))}
+          </div>
+          
+          {/* Calendar Grid */}
+          <div className="grid grid-cols-7 gap-1">
+            {/* Empty cells for days before first day of month */}
+            {Array.from({ length: firstDayOfMonth }, (_, i) => (
+              <div key={`empty-${i}`} className="w-8 h-8" />
+            ))}
+            
+            {/* Day cells */}
+            {Array.from({ length: daysInMonth }, (_, i) => {
+              const day = i + 1;
+              const disabled = isDisabled(day);
+              const selected = isSelected(day);
+              const today = isToday(day);
+              
+              return (
+                <button
+                  key={day}
+                  type="button"
+                  onClick={() => !disabled && selectDate(day)}
+                  disabled={disabled}
+                  className={`w-8 h-8 rounded text-sm transition-all
+                    ${selected ? 'bg-primary text-primary-foreground font-semibold' : ''}
+                    ${today && !selected ? 'border border-primary text-primary' : ''}
+                    ${disabled ? 'text-muted-foreground/30 cursor-not-allowed' : 'hover:bg-muted text-foreground'}
+                  `}
+                >
+                  {day}
+                </button>
+              );
+            })}
+          </div>
+          
+          {/* Quick Actions */}
+          <div className="flex justify-between mt-3 pt-3 border-t border-border">
+            <button
+              type="button"
+              onClick={() => selectDate(new Date().getDate())}
+              className="text-xs text-primary hover:underline"
+            >
+              Today
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="text-xs text-muted-foreground hover:text-foreground"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Calendar Icon
+Icons.Calendar = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>;
+
 // Auth Context
 const AuthContext = createContext(null);
 const useAuth = () => useContext(AuthContext);
