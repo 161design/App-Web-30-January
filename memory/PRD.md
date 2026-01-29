@@ -94,3 +94,35 @@ Property Management Construction (PMC) Snag List application for tracking and ma
 ### Dependencies Added
 - Web: `browser-image-compression`, `recharts`
 - Mobile: `react-native-svg`, `react-native-view-shot`
+
+## Calendar UI & Auto-Assign Authorities (Jan 29, 2026)
+
+### A. Calendar UI Fix
+- **DatePickerCalendar component** - Full calendar picker UI
+- Features:
+  - Visual calendar grid with month/year navigation
+  - Click any date to select
+  - DD/MM/YYYY format display
+  - Clear date button
+  - "Today" quick select button
+  - Minimum date support (for future dates)
+- Works in both Create Snag and Edit Snag modals
+
+### B. Auto-Assign Authorities
+- **Backend API**: `/api/buildings/{name}/suggested-authorities`
+  - Aggregates historical snag data by building
+  - Returns top 3 authorities who handled most snags for that building
+  - Includes snag count for each authority
+- **Web App UI**:
+  - "Auto-Assign" button with lightning bolt icon
+  - Suggested authorities shown as clickable chips
+  - Shows snag count (e.g., "John Authority (5 snags)")
+  - One-click to assign suggested authority
+- **Mobile App UI**:
+  - Same features adapted for React Native
+  - Styled suggestion chips
+  - Auto-assign button in header
+
+### Test Data
+- Authority user: authority1@pmc.com / auth123
+- Building A has 5+ snags with authority assigned (for suggestions)
