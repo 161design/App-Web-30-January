@@ -297,7 +297,24 @@ class PMCSnagListAPITester:
                 return None
         return None
 
-    def test_create_snag_with_multiple_authorities(self):
+    def test_get_authorities(self):
+        """Test getting authorities list for multiple selection"""
+        success, response = self.run_test(
+            "Get Authorities List",
+            "GET",
+            "/api/users/authorities",
+            200
+        )
+        if success:
+            print(f"   Found {len(response)} authorities")
+            if len(response) > 0:
+                auth = response[0]
+                required_fields = ['id', 'name', 'email', 'role']
+                for field in required_fields:
+                    if field not in auth:
+                        print(f"❌ Missing field in authority: {field}")
+                        return False
+        return success
         """Test creating a snag with multiple authorities"""
         # First get available authorities
         success, authorities = self.run_test(
