@@ -688,12 +688,13 @@ function PhotoAnnotationModal({ photo, onSave, onClose }) {
 // Undo Icon
 Icons.Undo = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>;
 
-// Photo Upload Component with Compression
+// Photo Upload Component with Compression and Annotation
 function PhotoUpload({ photos, setPhotos, maxPhotos = 10 }) {
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
   const [compressing, setCompressing] = useState(false);
   const [compressionProgress, setCompressionProgress] = useState({ current: 0, total: 0 });
+  const [annotatingIndex, setAnnotatingIndex] = useState(null);
 
   const compressAndAddPhoto = async (file) => {
     try {
@@ -733,13 +734,25 @@ function PhotoUpload({ photos, setPhotos, maxPhotos = 10 }) {
       newPhotos.push(compressed);
     }
     
-    setPhotos(prev => [...prev, ...newPhotos]);
+    // If single photo, open annotation immediately
+    if (newPhotos.length === 1) {
+      setPhotos(prev => [...prev, ...newPhotos]);
+      setAnnotatingIndex(photos.length); // Index of the new photo
+    } else {
+      setPhotos(prev => [...prev, ...newPhotos]);
+    }
+    
     setCompressing(false);
     e.target.value = '';
   };
 
   const removePhoto = (index) => {
     setPhotos(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAnnotationSave = (annotatedImage) => {
+    setPhotos(prev => prev.map((photo, i) => i === annotatingIndex ? annotatedImage : photo));
+    setAnnotatingIndex(null);
   };
 
   return (
@@ -809,8 +822,20 @@ function PhotoUpload({ photos, setPhotos, maxPhotos = 10 }) {
               <img 
                 src={photo} 
                 alt={`Photo ${idx + 1}`}
-                className="w-full h-20 object-cover rounded-sm border border-border"
+                className="w-full h-20 object-cover rounded-sm border border-border cursor-pointer"
+                onClick={() => setAnnotatingIndex(idx)}
+                title="Click to annotate"
               />
+              {/* Annotate button overlay */}
+              <button
+                type="button"
+                onClick={() => setAnnotatingIndex(idx)}
+                className="absolute bottom-1 left-1 w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs"
+                title="Annotate"
+                data-testid={`annotate-photo-${idx}`}
+              >
+                <Icons.Edit />
+              </button>
               <button
                 type="button"
                 onClick={() => removePhoto(idx)}
@@ -823,6 +848,10 @@ function PhotoUpload({ photos, setPhotos, maxPhotos = 10 }) {
         </div>
       )}
       
+      {photos.length > 0 && (
+        <p className="text-xs text-muted-foreground">Click on any photo to annotate with circles/ellipses</p>
+      )}
+      
       {photos.length === 0 && !compressing && (
         <div 
           onClick={() => fileInputRef.current?.click()}
@@ -830,8 +859,17 @@ function PhotoUpload({ photos, setPhotos, maxPhotos = 10 }) {
         >
           <Icons.Image />
           <p className="text-muted-foreground mt-2">Click to upload photos or use camera</p>
-          <p className="text-xs text-muted-foreground mt-1">Images will be auto-compressed for faster uploads</p>
+          <p className="text-xs text-muted-foreground mt-1">Images will be auto-compressed and you can annotate them</p>
         </div>
+      )}
+      
+      {/* Annotation Modal */}
+      {annotatingIndex !== null && photos[annotatingIndex] && (
+        <PhotoAnnotationModal
+          photo={photos[annotatingIndex]}
+          onSave={handleAnnotationSave}
+          onClose={() => setAnnotatingIndex(null)}
+        />
       )}
     </div>
   );
