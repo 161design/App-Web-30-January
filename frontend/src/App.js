@@ -673,6 +673,19 @@ function PhotoAnnotationModal({ photo, onSave, onClose }) {
     img.src = photo;
   }, [photo]);
 
+  const drawEllipse = (ctx, { startX, startY, endX, endY, color }) => {
+    const centerX = (startX + endX) / 2;
+    const centerY = (startY + endY) / 2;
+    const radiusX = Math.abs(endX - startX) / 2;
+    const radiusY = Math.abs(endY - startY) / 2;
+    
+    ctx.beginPath();
+    ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, 2 * Math.PI);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  };
+
   // Draw on canvas
   useEffect(() => {
     if (!imageLoaded || !canvasRef.current) return;
@@ -695,19 +708,6 @@ function PhotoAnnotationModal({ photo, onSave, onClose }) {
       drawEllipse(ctx, tempAnnotation);
     }
   }, [imageLoaded, annotations, tempAnnotation, canvasSize]);
-
-  const drawEllipse = (ctx, { startX, startY, endX, endY, color }) => {
-    const centerX = (startX + endX) / 2;
-    const centerY = (startY + endY) / 2;
-    const radiusX = Math.abs(endX - startX) / 2;
-    const radiusY = Math.abs(endY - startY) / 2;
-    
-    ctx.beginPath();
-    ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, 2 * Math.PI);
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 3;
-    ctx.stroke();
-  };
 
   const getMousePos = (e) => {
     const canvas = canvasRef.current;
