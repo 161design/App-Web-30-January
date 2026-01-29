@@ -29,6 +29,12 @@ interface Contractor {
   name: string;
 }
 
+interface Authority {
+  id: string;
+  name: string;
+  snag_count?: number;
+}
+
 export default function CreateSnagScreen() {
   const router = useRouter();
   const { user } = useAuth();
@@ -40,14 +46,18 @@ export default function CreateSnagScreen() {
   const [priority, setPriority] = useState('medium');
   const [costEstimate, setCostEstimate] = useState('');
   const [assignedContractorId, setAssignedContractorId] = useState('');
+  const [assignedAuthorityId, setAssignedAuthorityId] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
   const [contractors, setContractors] = useState<Contractor[]>([]);
+  const [authorities, setAuthorities] = useState<Authority[]>([]);
+  const [suggestedAuthorities, setSuggestedAuthorities] = useState<Authority[]>([]);
   const [projectNames, setProjectNames] = useState<string[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<string[]>([]);
   const [showProjectPicker, setShowProjectPicker] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [annotatingPhotoIndex, setAnnotatingPhotoIndex] = useState<number | null>(null);
