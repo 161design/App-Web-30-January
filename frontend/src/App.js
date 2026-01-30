@@ -2325,11 +2325,58 @@ function SnagDetailModal({ snag, onClose, onUpdated }) {
           <div className="flex items-center gap-2">
             <StatusBadge status={snag.status} />
             <PriorityBadge priority={snag.priority} />
-            <button onClick={onClose} className="text-muted-foreground hover:text-foreground ml-4">
+            {canDelete && (
+              <button 
+                onClick={() => setShowDeleteConfirm(true)} 
+                className="text-destructive hover:bg-destructive/10 p-2 rounded-sm ml-2"
+                title="Delete Snag"
+                data-testid="delete-snag-btn"
+              >
+                <Icons.Trash />
+              </button>
+            )}
+            <button onClick={onClose} className="text-muted-foreground hover:text-foreground ml-2">
               <Icons.X />
             </button>
           </div>
         </div>
+        
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+            <div className="bg-card border border-border rounded-sm p-6 max-w-md mx-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-destructive/10 rounded-full flex items-center justify-center">
+                  <Icons.Trash />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">Delete Snag #{snag.query_no}?</h3>
+                  <p className="text-sm text-muted-foreground">This will move the snag to Recycle Bin</p>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground mb-4">
+                You can restore it later from the Recycle Bin page.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button 
+                  onClick={() => setShowDeleteConfirm(false)} 
+                  className="btn-outline"
+                  disabled={loading}
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleDelete} 
+                  className="bg-destructive text-destructive-foreground px-4 py-2 rounded-sm hover:bg-destructive/90"
+                  disabled={loading}
+                  data-testid="confirm-delete-btn"
+                >
+                  {loading ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         
         <div className="modal-content">
           {editMode && canEdit ? (
