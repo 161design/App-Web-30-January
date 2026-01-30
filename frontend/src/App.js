@@ -2687,6 +2687,163 @@ function SnagDetailModal({ snag, onClose, onUpdated }) {
   );
 }
 
+// Recycle Bin Page
+function RecycleBinPage() {
+  const [recycleBin, setRecycleBin] = useState({ buildings: {}, total_count: 0 });
+  const [loading, setLoading] = useState(true);
+  const [expandedBuilding, setExpandedBuilding] = useState(null);
+  const [actionLoading, setActionLoading] = useState(null);
+
+  useEffect(() => {
+    loadRecycleBin();
+  }, []);
+
+  const loadRecycleBin = async () => {
+    try {
+      const data = await api.get('/api/recycle-bin');
+      setRecycleBin(data);
+    } catch (err) {
+      console.error('Failed to load recycle bin:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRestore = async (snagId) => {
+    setActionLoading(snagId);
+    try {
+      await api.post(`/api/snags/${snagId}/restore`);
+      loadRecycleBin();
+    } catch (err) {
+      alert('Failed to restore snag: ' + err.message);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handlePermanentDelete = async (snagId) => {
+    if (!confirm('Are you sure? This will permanently delete the snag and cannot be undone.')) return;
+    
+    setActionLoading(snagId);
+    try {
+      await api.delete(`/api/snags/${snagId}?permanent=true`);
+      loadRecycleBin();
+    } catch (err) {
+      alert('Failed to delete snag: ' + err.message);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const buildings = Object.keys(recycleBin.buildings);
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-64 text-muted-foreground">Loading...</div>;
+  }
+
+  return (
+    <div className="space-y-6" data-testid="recycle-bin-page">
+      <div>
+        <h1 className="font-heading text-3xl font-bold text-foreground flex items-center gap-3">
+          <Icons.Trash /> Recycle Bin
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          {recycleBin.total_count} deleted snag{recycleBin.total_count !== 1 ? 's' : ''} across {buildings.length} building{buildings.length !== 1 ? 's' : ''}
+        </p>
+      </div>
+
+      {buildings.length === 0 ? (
+        <div className="card p-12 text-center">
+          <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+            <Icons.Trash />
+          </div>
+          <h3 className="font-semibold text-foreground mb-2">Recycle Bin is Empty</h3>
+          <p className="text-muted-foreground">Deleted snags will appear here organized by building.</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {buildings.map((building) => (
+            <div key={building} className="card overflow-hidden">
+              <button
+                onClick={() => setExpandedBuilding(expandedBuilding === building ? null : building)}
+                className="w-full px-6 py-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <Icons.Building />
+                  <div className="text-left">
+                    <h3 className="font-semibold text-foreground">{building}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {recycleBin.buildings[building].length} deleted snag{recycleBin.buildings[building].length !== 1 ? 's' : ''}
+                    </p>
+                  </div>
+                </div>
+                <svg 
+                  className={`w-5 h-5 text-muted-foreground transition-transform ${expandedBuilding === building ? 'rotate-180' : ''}`}
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              
+              {expandedBuilding === building && (
+                <div className="border-t border-border">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Description</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                        <th>Deleted By</th>
+                        <th>Deleted At</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {recycleBin.buildings[building].map((snag) => (
+                        <tr key={snag.id}>
+                          <td className="font-mono text-xs font-semibold">#{snag.query_no}</td>
+                          <td className="max-w-xs truncate">{snag.description}</td>
+                          <td>{snag.location}</td>
+                          <td><StatusBadge status={snag.status} /></td>
+                          <td className="text-sm">{snag.deleted_by_name || '-'}</td>
+                          <td className="text-sm text-muted-foreground">
+                            {snag.deleted_at ? new Date(snag.deleted_at).toLocaleDateString() : '-'}
+                          </td>
+                          <td>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleRestore(snag.id)}
+                                disabled={actionLoading === snag.id}
+                                className="text-xs bg-primary/10 text-primary px-3 py-1.5 rounded hover:bg-primary/20 flex items-center gap-1"
+                                data-testid={`restore-${snag.id}`}
+                              >
+                                <Icons.Undo /> Restore
+                              </button>
+                              <button
+                                onClick={() => handlePermanentDelete(snag.id)}
+                                disabled={actionLoading === snag.id}
+                                className="text-xs bg-destructive/10 text-destructive px-3 py-1.5 rounded hover:bg-destructive/20"
+                                data-testid={`permanent-delete-${snag.id}`}
+                              >
+                                Delete Forever
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Users Page
 function UsersPage() {
   const { user } = useAuth();
