@@ -829,7 +829,10 @@ export default function SnagDetailScreen() {
                     ]}
                     onPress={() => toggleAuthority(authority.id)}
                   >
-                    <View style={styles.checkbox}>
+                    <View style={[
+                      styles.checkbox,
+                      selectedAuthorityIds.includes(authority.id) && { backgroundColor: '#366092' }
+                    ]}>
                       {selectedAuthorityIds.includes(authority.id) && (
                         <Ionicons name="checkmark" size={16} color="#fff" />
                       )}
