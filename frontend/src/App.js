@@ -527,7 +527,9 @@ function Sidebar({ activeTab, setActiveTab, collapsed, setCollapsed }) {
       )}
       
       <nav className="sidebar-nav">
-        {navItems.map((item) => (
+        {navItems
+          .filter(item => !item.managerOnly || user?.role === 'manager')
+          .map((item) => (
           <button
             key={item.id}
             onClick={() => setActiveTab(item.id)}
