@@ -942,19 +942,88 @@ async def update_snag(
 @api_router.delete("/snags/{snag_id}")
 async def delete_snag(
     snag_id: str,
+    permanent: bool = False,
     current_user: dict = Depends(require_role([UserRole.MANAGER]))
 ):
-    # Get snag info before deletion for broadcast
+    """Soft delete snag (move to recycle bin) or permanent delete"""
     snag = await db.snags.find_one({"_id": ObjectId(snag_id)})
-    
-    result = await db.snags.delete_one({"_id": ObjectId(snag_id)})
-    if result.deleted_count == 0:
+    if not snag:
         raise HTTPException(status_code=404, detail="Snag not found")
     
-    # Broadcast deletion to all connected clients
-    await broadcast_snag_update("deleted", {"id": snag_id, "query_no": snag.get("query_no") if snag else None})
+    if permanent:
+        # Permanent delete - only from recycle bin
+        if not snag.get("deleted"):
+            raise HTTPException(status_code=400, detail="Can only permanently delete from recycle bin")
+        result = await db.snags.delete_one({"_id": ObjectId(snag_id)})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Snag not found")
+        await broadcast_snag_update("permanently_deleted", {"id": snag_id, "query_no": snag.get("query_no")})
+        return {"message": "Snag permanently deleted"}
+    else:
+        # Soft delete - move to recycle bin
+        await db.snags.update_one(
+            {"_id": ObjectId(snag_id)},
+            {
+                "$set": {
+                    "deleted": True,
+                    "deleted_at": datetime.utcnow(),
+                    "deleted_by_id": str(current_user["_id"]),
+                    "deleted_by_name": current_user["name"]
+                }
+            }
+        )
+        await broadcast_snag_update("deleted", {"id": snag_id, "query_no": snag.get("query_no")})
+        return {"message": "Snag moved to recycle bin"}
+
+@api_router.post("/snags/{snag_id}/restore")
+async def restore_snag(
+    snag_id: str,
+    current_user: dict = Depends(require_role([UserRole.MANAGER]))
+):
+    """Restore snag from recycle bin"""
+    snag = await db.snags.find_one({"_id": ObjectId(snag_id)})
+    if not snag:
+        raise HTTPException(status_code=404, detail="Snag not found")
     
-    return {"message": "Snag deleted successfully"}
+    if not snag.get("deleted"):
+        raise HTTPException(status_code=400, detail="Snag is not in recycle bin")
+    
+    await db.snags.update_one(
+        {"_id": ObjectId(snag_id)},
+        {
+            "$set": {"deleted": False, "updated_at": datetime.utcnow()},
+            "$unset": {"deleted_at": "", "deleted_by_id": "", "deleted_by_name": ""}
+        }
+    )
+    
+    await broadcast_snag_update("restored", {"id": snag_id, "query_no": snag.get("query_no")})
+    return {"message": "Snag restored successfully"}
+
+@api_router.get("/recycle-bin")
+async def get_recycle_bin(
+    current_user: dict = Depends(require_role([UserRole.MANAGER]))
+):
+    """Get all deleted snags organized by building"""
+    deleted_snags = await db.snags.find({"deleted": True}).sort("deleted_at", -1).to_list(1000)
+    
+    # Organize by building
+    buildings = {}
+    for snag in deleted_snags:
+        building = snag.get("project_name", "Unknown")
+        if building not in buildings:
+            buildings[building] = []
+        buildings[building].append({
+            "id": str(snag["_id"]),
+            "query_no": snag["query_no"],
+            "description": snag["description"],
+            "location": snag["location"],
+            "status": snag["status"],
+            "priority": snag["priority"],
+            "deleted_at": snag.get("deleted_at"),
+            "deleted_by_name": snag.get("deleted_by_name")
+        })
+    
+    return {"buildings": buildings, "total_count": len(deleted_snags)}
 
 # ==================== Notification Endpoints ====================
 
