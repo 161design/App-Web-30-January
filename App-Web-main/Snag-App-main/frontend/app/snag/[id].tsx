@@ -1497,4 +1497,73 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     flex: 1,
   },
+  authoritiesList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 4,
+  },
+  authorityTag: {
+    backgroundColor: 'rgba(54, 96, 146, 0.1)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  authorityTagText: {
+    fontSize: 13,
+    color: '#366092',
+    fontWeight: '500',
+  },
+  editAuthoritiesButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 12,
+    paddingVertical: 8,
+  },
+  editAuthoritiesText: {
+    fontSize: 14,
+    color: '#366092',
+    fontWeight: '500',
+  },
+  authorityListModal: {
+    maxHeight: 300,
+  },
+  authorityOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    gap: 12,
+  },
+  authorityOptionSelected: {
+    backgroundColor: 'rgba(54, 96, 146, 0.05)',
+  },
+  authorityOptionText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: '#366092',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  modalDoneButton: {
+    backgroundColor: '#366092',
+    padding: 16,
+    alignItems: 'center',
+    borderRadius: 8,
+    marginTop: 12,
+  },
+  modalDoneButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });
