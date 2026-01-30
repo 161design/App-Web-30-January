@@ -778,18 +778,75 @@ export default function SnagDetailScreen() {
           </View>
         )}
 
-        {/* Assigned Authority */}
-        {snag.assigned_authority_name && (
+        {/* Assigned Authorities - Multiple */}
+        {(snag.assigned_authority_names?.length > 0 || snag.assigned_authority_name) && (
           <View style={styles.section}>
             <View style={styles.detailRow}>
               <Ionicons name="shield-checkmark" size={20} color="#666" />
               <View style={styles.detailContent}>
-                <Text style={styles.detailLabel}>Assigned Authority</Text>
-                <Text style={styles.detailValue}>{snag.assigned_authority_name}</Text>
+                <Text style={styles.detailLabel}>Assigned Authorities</Text>
+                <View style={styles.authoritiesList}>
+                  {(snag.assigned_authority_names?.length > 0 
+                    ? snag.assigned_authority_names 
+                    : [snag.assigned_authority_name]
+                  ).map((name, idx) => (
+                    <View key={idx} style={styles.authorityTag}>
+                      <Text style={styles.authorityTagText}>{name}</Text>
+                    </View>
+                  ))}
+                </View>
               </View>
             </View>
+            {isEditing && canEdit && (
+              <TouchableOpacity 
+                style={styles.editAuthoritiesButton}
+                onPress={() => setShowAuthorityModal(true)}
+              >
+                <Ionicons name="pencil" size={16} color="#366092" />
+                <Text style={styles.editAuthoritiesText}>Edit Authorities ({selectedAuthorityIds.length} selected)</Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
+
+        {/* Authority Selection Modal */}
+        <Modal visible={showAuthorityModal} animationType="slide" transparent>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Select Authorities</Text>
+                <TouchableOpacity onPress={() => setShowAuthorityModal(false)}>
+                  <Ionicons name="close" size={24} color="#333" />
+                </TouchableOpacity>
+              </View>
+              <ScrollView style={styles.authorityListModal}>
+                {authorities.map((authority) => (
+                  <TouchableOpacity
+                    key={authority.id}
+                    style={[
+                      styles.authorityOption,
+                      selectedAuthorityIds.includes(authority.id) && styles.authorityOptionSelected,
+                    ]}
+                    onPress={() => toggleAuthority(authority.id)}
+                  >
+                    <View style={styles.checkbox}>
+                      {selectedAuthorityIds.includes(authority.id) && (
+                        <Ionicons name="checkmark" size={16} color="#fff" />
+                      )}
+                    </View>
+                    <Text style={styles.authorityOptionText}>{authority.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+              <TouchableOpacity
+                style={styles.modalDoneButton}
+                onPress={() => setShowAuthorityModal(false)}
+              >
+                <Text style={styles.modalDoneButtonText}>Done</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
 
         {/* Contractor Completion Date */}
         {snag.contractor_completion_date && (
