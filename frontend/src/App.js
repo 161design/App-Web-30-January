@@ -3027,6 +3027,7 @@ function App() {
     switch (activeTab) {
       case 'dashboard': return <DashboardPage />;
       case 'snags': return <SnagsPage />;
+      case 'recycle-bin': return <RecycleBinPage />;
       case 'users': return <UsersPage />;
       case 'notifications': return <NotificationsPage />;
       default: return <DashboardPage />;
