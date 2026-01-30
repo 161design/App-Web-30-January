@@ -73,6 +73,8 @@ export default function SnagDetailScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState('');
   const [feedback, setFeedback] = useState('');
   const [authorityComment, setAuthorityComment] = useState('');
@@ -91,6 +93,7 @@ export default function SnagDetailScreen() {
 
   // Permission checks
   const canEdit = user?.role === 'manager' || user?.role === 'inspector';
+  const canDelete = user?.role === 'manager';
   const isContractor = user?.role === 'contractor';
   const isAuthority = user?.role === 'authority';
 
