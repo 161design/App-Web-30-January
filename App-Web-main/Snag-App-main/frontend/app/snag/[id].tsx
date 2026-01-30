@@ -149,6 +149,22 @@ export default function SnagDetailScreen() {
     );
   };
 
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await axios.delete(`${BACKEND_URL}/api/snags/${id}`);
+      Alert.alert('Success', 'Snag moved to Recycle Bin', [
+        { text: 'OK', onPress: () => router.back() }
+      ]);
+    } catch (error: any) {
+      console.error('Error deleting snag:', error);
+      Alert.alert('Error', error.response?.data?.detail || 'Failed to delete snag');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
+    }
+  };
+
   const startEditing = () => {
     if (!snag) return;
     setEditedSnag({
