@@ -156,3 +156,24 @@ Allows selecting multiple responsible authorities for a single snag using checkb
 - Authorities displayed as tags with count
 - Edit button opens checkbox modal for selection
 - Save updates assigned_authority_ids to backend
+
+## Delete with Recycle Bin Feature (Jan 30, 2026)
+
+### Backend
+- Soft delete: Sets `deleted: true`, `deleted_at`, `deleted_by_id/name`
+- GET `/api/recycle-bin` - Returns deleted snags grouped by building
+- POST `/api/snags/{id}/restore` - Restores snag from recycle bin
+- DELETE `/api/snags/{id}?permanent=true` - Permanently deletes from recycle bin
+- GET `/api/snags` now excludes deleted snags
+
+### Web App
+- **Delete button** in snag detail modal (trash icon)
+- **Confirmation dialog** with "Move to Recycle Bin" message
+- **Recycle Bin page** in sidebar (Manager only)
+  - Organized by building (expandable cards)
+  - Shows: ID, Description, Location, Status, Deleted By, Deleted At
+  - **Restore** button - recovers snag
+  - **Delete Forever** button - permanently removes
+
+### Mobile App
+- Delete feature can be added similarly
