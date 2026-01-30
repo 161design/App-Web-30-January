@@ -202,6 +202,11 @@ export default function SnagDetailScreen() {
       if (JSON.stringify(editedSnag.photos) !== JSON.stringify(snag.photos)) {
         updateData.photos = editedSnag.photos;
       }
+      // Add multiple authorities
+      const originalAuthIds = snag.assigned_authority_ids || (snag.assigned_authority_id ? [snag.assigned_authority_id] : []);
+      if (JSON.stringify(selectedAuthorityIds.sort()) !== JSON.stringify(originalAuthIds.sort())) {
+        updateData.assigned_authority_ids = selectedAuthorityIds;
+      }
 
       if (Object.keys(updateData).length === 0) {
         Alert.alert('Info', 'No changes to save');
