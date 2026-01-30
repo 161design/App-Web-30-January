@@ -150,3 +150,9 @@ Allows selecting multiple responsible authorities for a single snag using checkb
 - Radio buttons replaced with checkboxes
 - Suggested authorities with selection
 - Auto-assign functionality
+
+### Mobile App Edit Screen Update (Jan 29, 2026)
+- Added multiple authority selection in snag detail/edit screen
+- Authorities displayed as tags with count
+- Edit button opens checkbox modal for selection
+- Save updates assigned_authority_ids to backend
