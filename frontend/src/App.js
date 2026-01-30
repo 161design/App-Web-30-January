@@ -493,6 +493,7 @@ function Sidebar({ activeTab, setActiveTab, collapsed, setCollapsed }) {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Icons.Dashboard },
     { id: 'snags', label: 'Snags', icon: Icons.List },
+    { id: 'recycle-bin', label: 'Recycle Bin', icon: Icons.Trash, managerOnly: true },
     { id: 'users', label: 'Users', icon: Icons.Users },
     { id: 'notifications', label: 'Notifications', icon: Icons.Bell },
   ];
