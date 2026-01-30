@@ -444,12 +444,47 @@ export default function SnagDetailScreen() {
             </TouchableOpacity>
           )}
           {canDelete && !isEditing && (
-            <TouchableOpacity onPress={deleteSnag} style={styles.headerButton}>
+            <TouchableOpacity onPress={() => setShowDeleteModal(true)} style={styles.headerButton}>
               <Ionicons name="trash-outline" size={24} color="#fff" />
             </TouchableOpacity>
           )}
         </View>
       </View>
+
+      {/* Delete Confirmation Modal */}
+      <Modal visible={showDeleteModal} transparent animationType="fade">
+        <View style={styles.deleteModalOverlay}>
+          <View style={styles.deleteModalContent}>
+            <View style={styles.deleteModalIcon}>
+              <Ionicons name="trash" size={32} color="#e74c3c" />
+            </View>
+            <Text style={styles.deleteModalTitle}>Delete Snag #{snag.query_no}?</Text>
+            <Text style={styles.deleteModalMessage}>
+              This will move the snag to Recycle Bin. You can restore it later.
+            </Text>
+            <View style={styles.deleteModalButtons}>
+              <TouchableOpacity 
+                style={styles.deleteModalCancelBtn}
+                onPress={() => setShowDeleteModal(false)}
+                disabled={isDeleting}
+              >
+                <Text style={styles.deleteModalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.deleteModalDeleteBtn}
+                onPress={handleDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.deleteModalDeleteText}>Delete</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Edit Mode Header Bar */}
       {isEditing && (
