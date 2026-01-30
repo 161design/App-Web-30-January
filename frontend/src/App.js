@@ -2219,6 +2219,7 @@ function SnagDetailModal({ snag, onClose, onUpdated }) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [contractors, setContractors] = useState([]);
   const [photos, setPhotos] = useState(snag.photos || []);
   const [formData, setFormData] = useState({
@@ -2239,6 +2240,7 @@ function SnagDetailModal({ snag, onClose, onUpdated }) {
   const isContractor = user?.role === 'contractor';
   const isAuthority = user?.role === 'authority';
   const canEdit = isManager || isInspector;
+  const canDelete = isManager;
 
   useEffect(() => {
     if (canEdit) loadContractors();
@@ -2250,6 +2252,19 @@ function SnagDetailModal({ snag, onClose, onUpdated }) {
       setContractors(data);
     } catch (err) {
       console.error('Failed to load contractors:', err);
+    }
+  };
+
+  const handleDelete = async () => {
+    setLoading(true);
+    try {
+      await api.delete(`/api/snags/${snag.id}`);
+      setShowDeleteConfirm(false);
+      onUpdated();
+    } catch (err) {
+      alert('Failed to delete snag: ' + err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
