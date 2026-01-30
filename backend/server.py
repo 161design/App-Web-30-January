@@ -629,7 +629,7 @@ async def get_snags(
     assigned_contractor_id: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
-    query = {}
+    query = {"$or": [{"deleted": {"$exists": False}}, {"deleted": False}]}  # Exclude deleted snags
     
     # Role-based filtering
     if current_user["role"] == UserRole.CONTRACTOR:
@@ -637,10 +637,11 @@ async def get_snags(
     elif current_user["role"] == UserRole.AUTHORITY:
         # Authority can see snags where they are in either old or new field
         user_id = str(current_user["_id"])
-        query["$or"] = [
-            {"assigned_authority_id": user_id},
-            {"assigned_authority_ids": user_id}
+        query["$and"] = [
+            {"$or": [{"deleted": {"$exists": False}}, {"deleted": False}]},
+            {"$or": [{"assigned_authority_id": user_id}, {"assigned_authority_ids": user_id}]}
         ]
+        del query["$or"]
     
     if status:
         query["status"] = status
